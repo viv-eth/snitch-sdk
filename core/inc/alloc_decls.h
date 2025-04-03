@@ -1,0 +1,29 @@
+// Copyright 2023 ETH Zurich and University of Bologna.
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+
+#pragma once
+
+#include <stddef.h>
+#include <stdint.h>
+
+typedef struct {
+    // Base address from where allocation starts
+    uint32_t base;
+    // End address up to which allocation is allowed
+    uint32_t end;
+    // Address of the next allocated block
+    uint32_t next;
+} snrt_allocator_t;
+
+static inline void *snrt_l1_next();
+
+static inline void *snrt_l3_next();
+
+static inline void *snrt_l1_alloc(size_t size);
+
+static inline void snrt_l1_update_next(void *next);
+
+static inline void *snrt_l3_alloc(size_t size);
+
+static inline void snrt_alloc_init();

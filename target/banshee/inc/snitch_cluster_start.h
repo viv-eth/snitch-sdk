@@ -13,8 +13,8 @@
 #define SNRT_CRT0_POST_BARRIER
 #define SNRT_CRT0_EXIT
 
-static inline volatile uint32_t* snrt_exit_code_destination() {
-    return (volatile uint32_t*)0x02000014;
+static inline volatile uint32_t *snrt_exit_code_destination() {
+  return (volatile uint32_t *)0x02000014;
 }
 
 #include "start.h"

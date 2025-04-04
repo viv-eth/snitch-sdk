@@ -41,58 +41,58 @@ omp_prof_t *omp_prof;
 // public
 //================================================================================
 static inline void initTeam(omp_t *_this, omp_team_t *team) {
-    (void)_this;
-    (void)team;
+  (void)_this;
+  (void)team;
 }
 
 void omp_init(void) {
-    if (snrt_cluster_core_idx() == 0) {
-        // allocate space for kmp arguments
-        kmpc_args = (_kmp_ptr32 *)snrt_l1_alloc(sizeof(_kmp_ptr32) *
-                                                KMP_FORK_MAX_NARGS);
+  if (snrt_cluster_core_idx() == 0) {
+    // allocate space for kmp arguments
+    kmpc_args =
+        (_kmp_ptr32 *)snrt_l1_alloc(sizeof(_kmp_ptr32) * KMP_FORK_MAX_NARGS);
 #ifndef OMPSTATIC_NUMTHREADS
-        omp_p = (omp_t *)snrt_l1_alloc(sizeof(omp_t));
-        unsigned int nbCores = snrt_cluster_compute_core_num();
-        omp_p->numThreads = nbCores;
-        omp_p->maxThreads = nbCores;
+    omp_p = (omp_t *)snrt_l1_alloc(sizeof(omp_t));
+    unsigned int nbCores = snrt_cluster_compute_core_num();
+    omp_p->numThreads = nbCores;
+    omp_p->maxThreads = nbCores;
 
-        omp_p->plainTeam.nbThreads = nbCores;
-        omp_p->plainTeam.loop_epoch = 0;
-        omp_p->plainTeam.loop_is_setup = 0;
+    omp_p->plainTeam.nbThreads = nbCores;
+    omp_p->plainTeam.loop_epoch = 0;
+    omp_p->plainTeam.loop_is_setup = 0;
 
-        for (unsigned int i = 0; i < sizeof(omp_p->plainTeam.core_epoch) /
-                                sizeof(omp_p->plainTeam.core_epoch[0]);
-             i++)
-            omp_p->plainTeam.core_epoch[i] = 0;
+    for (unsigned int i = 0; i < sizeof(omp_p->plainTeam.core_epoch) /
+                                     sizeof(omp_p->plainTeam.core_epoch[0]);
+         i++)
+      omp_p->plainTeam.core_epoch[i] = 0;
 
-        initTeam((omp_t *)omp_p, (omp_team_t *)&omp_p->plainTeam);
-        omp_p->kmpc_barrier =
-            (snrt_barrier_t *)snrt_l1_alloc(sizeof(snrt_barrier_t));
-        snrt_memset(omp_p->kmpc_barrier, 0, sizeof(snrt_barrier_t));
-        // Exchange omp pointer with other cluster cores
-        omp_p_global = omp_p;
+    initTeam((omp_t *)omp_p, (omp_team_t *)&omp_p->plainTeam);
+    omp_p->kmpc_barrier =
+        (snrt_barrier_t *)snrt_l1_alloc(sizeof(snrt_barrier_t));
+    snrt_memset(omp_p->kmpc_barrier, 0, sizeof(snrt_barrier_t));
+    // Exchange omp pointer with other cluster cores
+    omp_p_global = omp_p;
 #else
-        omp_p.kmpc_barrier =
-            (snrt_barrier_t *)snrt_l1_alloc(sizeof(snrt_barrier_t));
-        snrt_memset(omp_p.kmpc_barrier, 0, sizeof(snrt_barrier_t));
-        // Exchange omp pointer with other cluster cores
-        omp_p_global = &omp_p;
+    omp_p.kmpc_barrier =
+        (snrt_barrier_t *)snrt_l1_alloc(sizeof(snrt_barrier_t));
+    snrt_memset(omp_p.kmpc_barrier, 0, sizeof(snrt_barrier_t));
+    // Exchange omp pointer with other cluster cores
+    omp_p_global = &omp_p;
 #endif
 
 #ifdef OPENMP_PROFILE
-        omp_prof = (omp_prof_t *)snrt_l1_alloc(sizeof(omp_prof_t));
+    omp_prof = (omp_prof_t *)snrt_l1_alloc(sizeof(omp_prof_t));
 #endif
 
-    } else {
-        while (!omp_p_global)
-            ;
+  } else {
+    while (!omp_p_global)
+      ;
 #ifndef OMPSTATIC_NUMTHREADS
-        omp_p = omp_p_global;
+    omp_p = omp_p_global;
 #endif
-    }
+  }
 
-    OMP_PRINTF(10, "omp_init numThreads=%d maxThreads=%d\n", omp_p->numThreads,
-               omp_p->maxThreads);
+  OMP_PRINTF(10, "omp_init numThreads=%d maxThreads=%d\n", omp_p->numThreads,
+             omp_p->maxThreads);
 }
 
 /**
@@ -106,30 +106,30 @@ void omp_init(void) {
  * @param core_idx cluster-local core-index
  */
 unsigned __attribute__((noinline)) snrt_omp_bootstrap(uint32_t core_idx) {
-    dm_init();
-    eu_init();
-    omp_init();
-    if (core_idx == 0) {
-        // master hart initializes event unit and runtime
-        snrt_cluster_hw_barrier();
-        while (eu_get_workers_in_wfi() != (snrt_cluster_compute_core_num() - 1))
-            ;
-        return 0;
-    } else if (snrt_is_dm_core()) {
-        // send datamover to dm_main
-        snrt_cluster_hw_barrier();
-        dm_main();
-        return 1;
-    } else {
-        // all worker cores enter the event queue
-        snrt_cluster_hw_barrier();
-        eu_event_loop(core_idx);
-        return 1;
-    }
+  dm_init();
+  eu_init();
+  omp_init();
+  if (core_idx == 0) {
+    // master hart initializes event unit and runtime
+    snrt_cluster_hw_barrier();
+    while (eu_get_workers_in_wfi() != (snrt_cluster_compute_core_num() - 1))
+      ;
+    return 0;
+  } else if (snrt_is_dm_core()) {
+    // send datamover to dm_main
+    snrt_cluster_hw_barrier();
+    dm_main();
+    return 1;
+  } else {
+    // all worker cores enter the event queue
+    snrt_cluster_hw_barrier();
+    eu_event_loop(core_idx);
+    return 1;
+  }
 }
 
 void omp_print_prof(void) {
 #ifdef OPENMP_PROFILE
-    printf("%-20s %d\n", "fork_oh", omp_prof->fork_oh);
+  printf("%-20s %d\n", "fork_oh", omp_prof->fork_oh);
 #endif
 }

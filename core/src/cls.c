@@ -4,8 +4,8 @@
 
 #include "snrt.h"
 
-__thread cls_t* _cls_ptr;
+__thread cls_t *_cls_ptr;
 
 cls_t __attribute__((section(".cbss"))) _cls;
 
-extern cls_t* cls();
+extern cls_t *cls();

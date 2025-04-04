@@ -11,7 +11,7 @@
  * @param mask set bit at X sets the interrupt of hart X
  */
 inline void snrt_int_cluster_set(uint32_t mask) {
-    *(snrt_cluster_clint_set_ptr()) = mask;
+  *(snrt_cluster_clint_set_ptr()) = mask;
 }
 
 /**
@@ -19,7 +19,7 @@ inline void snrt_int_cluster_set(uint32_t mask) {
  * @param mask set bit at X clears the interrupt of hart X
  */
 inline void snrt_int_cluster_clr(uint32_t mask) {
-    *(snrt_cluster_clint_clr_ptr()) = mask;
+  *(snrt_cluster_clint_clr_ptr()) = mask;
 }
 
 /**
@@ -30,25 +30,25 @@ inline void snrt_int_cluster_clr(uint32_t mask) {
  *         cleared.
  */
 inline void snrt_int_clr_mcip_unsafe() {
-    snrt_int_cluster_clr(1 << snrt_cluster_core_idx());
+  snrt_int_cluster_clr(1 << snrt_cluster_core_idx());
 }
 
 /**
  * @brief Wait for MCIP interrupt to be cleared
  */
 inline void snrt_int_wait_mcip_clr() {
-    while (read_csr(mip) & MIP_MCIP)
-        ;
+  while (read_csr(mip) & MIP_MCIP)
+    ;
 }
 
 /**
  * @brief Clear MCIP interrupt and wait for the write to have effect
  */
 inline void snrt_int_clr_mcip() {
-    snrt_int_clr_mcip_unsafe();
-    snrt_int_wait_mcip_clr();
+  snrt_int_clr_mcip_unsafe();
+  snrt_int_wait_mcip_clr();
 }
 
 inline void snrt_int_set_mcip() {
-    snrt_int_cluster_set(1 << snrt_cluster_core_idx());
+  snrt_int_cluster_set(1 << snrt_cluster_core_idx());
 }

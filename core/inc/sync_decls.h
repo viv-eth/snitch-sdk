@@ -7,8 +7,8 @@
 #include <stdint.h>
 
 typedef struct {
-    uint32_t volatile cnt;
-    uint32_t volatile iteration;
+  uint32_t volatile cnt;
+  uint32_t volatile iteration;
 } snrt_barrier_t;
 
 extern volatile uint32_t _snrt_mutex;

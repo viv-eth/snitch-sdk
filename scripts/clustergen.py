@@ -19,6 +19,7 @@ HEX_PATTERN = re.compile(r"0x[0-9a-fA-F]+(?:_[0-9a-fA-F]+)*")
 
 def preprocess_hex_in_hjson(text):
     """ Converts hex numbers (e.g., 0x8000_0000) to decimal before parsing HJSON. """
+
     def hex_to_decimal(match):
         hex_str = match.group(0).replace("_", "")  # Remove underscores
         return str(int(hex_str, 16))  # Convert to decimal and replace
@@ -71,8 +72,10 @@ def main():
     with args.clustercfg as file:
         try:
             srcfull = file.read()
-            srcfull = preprocess_hex_in_hjson(srcfull)  # Convert hex to decimal
-            obj = hjson.loads(srcfull, use_decimal=True)  # Now parse clean HJSON
+            srcfull = preprocess_hex_in_hjson(
+                srcfull)  # Convert hex to decimal
+            obj = hjson.loads(srcfull,
+                              use_decimal=True)  # Now parse clean HJSON
             obj = JsonRef.replace_refs(obj)
 
         except ValueError:

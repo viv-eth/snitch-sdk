@@ -4,7 +4,7 @@
 
 #include "snrt.h"
 
-extern perf_regs_t* snrt_perf_counters();
+extern perf_regs_t *snrt_perf_counters();
 
 extern void snrt_cfg_perf_counter(uint32_t perf_cnt, uint16_t metric,
                                   uint16_t hart);

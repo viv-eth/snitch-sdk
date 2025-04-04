@@ -26,7 +26,9 @@ inline snrt_allocator_t *snrt_l1_allocator_v2() { return &l1_allocator_v2; }
  *
  * @return The next pointer of the L1 allocator.
  */
-inline void *snrt_l1_next_v2() { return (void *)(uintptr_t)snrt_l1_allocator_v2()->next; }
+inline void *snrt_l1_next_v2() {
+  return (void *)(uintptr_t)snrt_l1_allocator_v2()->next;
+}
 
 /**
  * @brief Override the L1 allocator next pointer.
@@ -34,7 +36,7 @@ inline void *snrt_l1_next_v2() { return (void *)(uintptr_t)snrt_l1_allocator_v2(
  * @param next The new value for the next pointer.
  */
 inline void snrt_l1_update_next_v2(void *next) {
-    snrt_l1_allocator_v2()->next = (uintptr_t)next;
+  snrt_l1_allocator_v2()->next = (uintptr_t)next;
 }
 
 /**
@@ -42,8 +44,8 @@ inline void snrt_l1_update_next_v2(void *next) {
  *        exception if it does.
  */
 inline void snrt_l1_alloc_check_bounds() {
-    if (snrt_l1_allocator_v2()->next > snrt_l1_allocator_v2()->end)
-        asm volatile("ecall \n");
+  if (snrt_l1_allocator_v2()->next > snrt_l1_allocator_v2()->end)
+    asm volatile("ecall \n");
 }
 
 /**
@@ -58,12 +60,12 @@ inline void snrt_l1_alloc_check_bounds() {
  * @return Pointer to the allocated variable.
  */
 inline void *snrt_l1_alloc_cluster_local(size_t size, const size_t alignment) {
-    snrt_l1_allocator_v2()->next =
-        ALIGN_UP(snrt_l1_allocator_v2()->next, alignment);
-    void *retval = snrt_l1_next_v2();
-    snrt_l1_allocator_v2()->next += size;
-    snrt_l1_alloc_check_bounds();
-    return retval;
+  snrt_l1_allocator_v2()->next =
+      ALIGN_UP(snrt_l1_allocator_v2()->next, alignment);
+  void *retval = snrt_l1_next_v2();
+  snrt_l1_allocator_v2()->next += size;
+  snrt_l1_alloc_check_bounds();
+  return retval;
 }
 
 /**
@@ -81,12 +83,12 @@ inline void *snrt_l1_alloc_cluster_local(size_t size, const size_t alignment) {
  */
 inline void *snrt_l1_alloc_compute_core_local(size_t size,
                                               const size_t alignment) {
-    snrt_l1_allocator_v2()->next =
-        ALIGN_UP(snrt_l1_allocator_v2()->next, alignment);
-    void *retval = snrt_l1_next_v2() + size * snrt_cluster_core_idx();
-    snrt_l1_allocator_v2()->next += size * snrt_cluster_compute_core_num();
-    snrt_l1_alloc_check_bounds();
-    return retval;
+  snrt_l1_allocator_v2()->next =
+      ALIGN_UP(snrt_l1_allocator_v2()->next, alignment);
+  void *retval = snrt_l1_next_v2() + size * snrt_cluster_core_idx();
+  snrt_l1_allocator_v2()->next += size * snrt_cluster_compute_core_num();
+  snrt_l1_alloc_check_bounds();
+  return retval;
 }
 
 /**
@@ -104,8 +106,8 @@ inline void *snrt_l1_alloc_compute_core_local(size_t size,
  */
 inline void *snrt_compute_core_local_ptr(void *ptr, uint32_t core_idx,
                                          size_t size) {
-    size_t offset = (core_idx - snrt_cluster_core_idx()) * size;
-    return (void *)((uintptr_t)ptr + offset);
+  size_t offset = (core_idx - snrt_cluster_core_idx()) * size;
+  return (void *)((uintptr_t)ptr + offset);
 }
 
 /**
@@ -122,8 +124,8 @@ inline void *snrt_compute_core_local_ptr(void *ptr, uint32_t core_idx,
  */
 inline void *snrt_remote_l1_ptr(void *ptr, uint32_t src_cluster_idx,
                                 uint32_t dst_cluster_idx) {
-    return (void *)((uintptr_t)ptr +
-                    (dst_cluster_idx - src_cluster_idx) * SNRT_CLUSTER_OFFSET);
+  return (void *)((uintptr_t)ptr +
+                  (dst_cluster_idx - src_cluster_idx) * SNRT_CLUSTER_OFFSET);
 }
 
 /**
@@ -136,16 +138,15 @@ inline void *snrt_remote_l1_ptr(void *ptr, uint32_t src_cluster_idx,
  *       functions.
  */
 inline void snrt_alloc_init_v2() {
-    // Calculate end address of the heap. The top of the TCDM address space is
-    // reserved for the cluster-local storage (CLS) and the stack of every
-    // core. We further provision a safety margin of 128B. The rest of the
-    // TCDM is reserved for the heap.
-    uint32_t heap_end_addr = snrt_cls_base_addr();
-    heap_end_addr -= (1 << SNRT_LOG2_STACK_SIZE) * snrt_cluster_core_num();
-    heap_end_addr -= 128;
-    // Initialize L1 allocator
-    snrt_l1_allocator_v2()->base =
-        ALIGN_UP(snrt_l1_start_addr(), MIN_CHUNK_SIZE);
-    snrt_l1_allocator_v2()->end = heap_end_addr;
-    snrt_l1_allocator_v2()->next = snrt_l1_allocator_v2()->base;
+  // Calculate end address of the heap. The top of the TCDM address space is
+  // reserved for the cluster-local storage (CLS) and the stack of every
+  // core. We further provision a safety margin of 128B. The rest of the
+  // TCDM is reserved for the heap.
+  uint32_t heap_end_addr = snrt_cls_base_addr();
+  heap_end_addr -= (1 << SNRT_LOG2_STACK_SIZE) * snrt_cluster_core_num();
+  heap_end_addr -= 128;
+  // Initialize L1 allocator
+  snrt_l1_allocator_v2()->base = ALIGN_UP(snrt_l1_start_addr(), MIN_CHUNK_SIZE);
+  snrt_l1_allocator_v2()->end = heap_end_addr;
+  snrt_l1_allocator_v2()->next = snrt_l1_allocator_v2()->base;
 }

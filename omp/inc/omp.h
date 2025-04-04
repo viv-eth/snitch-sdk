@@ -15,27 +15,27 @@
 #define OPENMP_PROFILE
 
 #ifdef OPENMP_PROFILE
-#define OMP_PROF(X) \
-    do {            \
-        { X; }      \
-    } while (0)
+#define OMP_PROF(X)                                                            \
+  do {                                                                         \
+    { X; }                                                                     \
+  } while (0)
 #else
-#define OMP_PROF(X) \
-    do {            \
-    } while (0)
+#define OMP_PROF(X)                                                            \
+  do {                                                                         \
+  } while (0)
 #endif
 
 #ifdef OMP_DEBUG_LEVEL
 #include "../../../deps/riscv-opcodes/encoding.h"
 #include "printf.h"
-#define _OMP_PRINTF(...)             \
-    if (1) {                         \
-        printf("[omp] "__VA_ARGS__); \
-    }
-#define OMP_PRINTF(d, ...)        \
-    if (OMP_DEBUG_LEVEL >= d) {   \
-        _OMP_PRINTF(__VA_ARGS__); \
-    }
+#define _OMP_PRINTF(...)                                                       \
+  if (1) {                                                                     \
+    printf("[omp] "__VA_ARGS__);                                               \
+  }
+#define OMP_PRINTF(d, ...)                                                     \
+  if (OMP_DEBUG_LEVEL >= d) {                                                  \
+    _OMP_PRINTF(__VA_ARGS__);                                                  \
+  }
 #else
 #define OMP_PRINTF(d, ...)
 #endif
@@ -54,65 +54,66 @@
 /**
  * @brief Bootstrap macro for openmp applications
  */
-#define __snrt_omp_bootstrap(core_idx)     \
-    if (snrt_omp_bootstrap(core_idx)) do { \
-            snrt_cluster_hw_barrier();     \
-            return 0;                      \
-    } while (0)
+#define __snrt_omp_bootstrap(core_idx)                                         \
+  if (snrt_omp_bootstrap(core_idx))                                            \
+    do {                                                                       \
+      snrt_cluster_hw_barrier();                                               \
+      return 0;                                                                \
+  } while (0)
 
 /**
  * @brief Destroy an OpenMP session so all cores exit cleanly
  */
-#define __snrt_omp_destroy(core_idx) \
-    eu_exit(core_idx);               \
-    dm_exit();                       \
-    snrt_cluster_hw_barrier();
+#define __snrt_omp_destroy(core_idx)                                           \
+  eu_exit(core_idx);                                                           \
+  dm_exit();                                                                   \
+  snrt_cluster_hw_barrier();
 
 //================================================================================
 // types
 //================================================================================
 
 typedef struct {
-    char nbThreads;
+  char nbThreads;
 #ifndef OMPSTATIC_NUMTHREADS
-    int loop_epoch;
-    int loop_start;
-    int loop_end;
-    int loop_incr;
-    int loop_chunk;
-    int loop_is_setup;
-    int core_epoch[16];  // for dynamic scheduling
+  int loop_epoch;
+  int loop_start;
+  int loop_end;
+  int loop_incr;
+  int loop_chunk;
+  int loop_is_setup;
+  int core_epoch[16]; // for dynamic scheduling
 #endif
 } omp_team_t;
 
 typedef struct {
 #ifndef OMPSTATIC_NUMTHREADS
-    omp_team_t plainTeam;
-    int numThreads;
-    int maxThreads;
+  omp_team_t plainTeam;
+  int numThreads;
+  int maxThreads;
 #else
-    const omp_team_t plainTeam;
-    const int numThreads;
-    const int maxThreads;
+  const omp_team_t plainTeam;
+  const int numThreads;
+  const int maxThreads;
 #endif
-    /**
-     * @brief Pointer to the barrier register used for synchronization eg with
-     * #pragma omp barrier
-     *
-     */
-    snrt_barrier_t *kmpc_barrier;
-    /**
-     * @brief Usually the arguments passed to __kmpc_fork_call would do a malloc
-     * with the amount of arguments passed. This is too slow for our case and
-     * thus we reserve a chunk of arguments in TCDM and use it. This limits the
-     * maximum number of arguments
-     */
-    _kmp_ptr32 *kmpc_args;
+  /**
+   * @brief Pointer to the barrier register used for synchronization eg with
+   * #pragma omp barrier
+   *
+   */
+  snrt_barrier_t *kmpc_barrier;
+  /**
+   * @brief Usually the arguments passed to __kmpc_fork_call would do a malloc
+   * with the amount of arguments passed. This is too slow for our case and
+   * thus we reserve a chunk of arguments in TCDM and use it. This limits the
+   * maximum number of arguments
+   */
+  _kmp_ptr32 *kmpc_args;
 } omp_t;
 
 #ifdef OPENMP_PROFILE
 typedef struct {
-    uint32_t fork_oh;
+  uint32_t fork_oh;
 } omp_prof_t;
 extern omp_prof_t *omp_prof;
 #endif
@@ -144,35 +145,35 @@ extern omp_prof_t *omp_prof;
 #ifndef OMPSTATIC_NUMTHREADS
 static inline omp_t *omp_getData() { return (omp_t *)omp_p; }
 static inline omp_team_t *omp_get_team(omp_t *_this) {
-    return &_this->plainTeam;
+  return &_this->plainTeam;
 }
 #else
 static inline const omp_t *omp_getData() { return &omp_p; }
 static inline const omp_team_t *omp_get_team(const omp_t *_this) {
-    return &_this->plainTeam;
+  return &_this->plainTeam;
 }
 #endif
 
 static inline unsigned omp_get_thread_num(void) {
-    return snrt_cluster_core_idx();
+  return snrt_cluster_core_idx();
 }
 
 static inline unsigned omp_get_num_threads(void) {
-    return snrt_cluster_compute_core_num();
+  return snrt_cluster_compute_core_num();
 }
 
 static inline void parallelRegion(int32_t argc, void *data,
                                   void (*fn)(void *, uint32_t),
                                   int num_threads) {
 #ifndef OMPSTATIC_NUMTHREADS
-    omp_p->plainTeam.nbThreads = num_threads;
+  omp_p->plainTeam.nbThreads = num_threads;
 #endif
 
-    OMP_PRINTF(10, "num_threads=%d nbThreads=%d omp_p->numThreads=%d\n",
-               num_threads, omp_p->plainTeam.nbThreads, omp_p->numThreads);
+  OMP_PRINTF(10, "num_threads=%d nbThreads=%d omp_p->numThreads=%d\n",
+             num_threads, omp_p->plainTeam.nbThreads, omp_p->numThreads);
 
-    // Now that the team is ready, wake up slaves
-    (void)eu_dispatch_push(fn, argc, data, num_threads);
+  // Now that the team is ready, wake up slaves
+  (void)eu_dispatch_push(fn, argc, data, num_threads);
 
-    eu_run_empty(snrt_cluster_core_idx());
+  eu_run_empty(snrt_cluster_core_idx());
 }

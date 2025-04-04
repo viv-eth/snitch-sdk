@@ -4,5 +4,5 @@
 
 // Provide an implementation for putchar.
 void snrt_putchar(char character) {
-    *(volatile uint32_t *)0xF00B8000 = character;
+  *(volatile uint32_t *)0xF00B8000 = character;
 }

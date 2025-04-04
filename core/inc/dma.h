@@ -21,8 +21,8 @@
 #define DMREP_FUNCT7 0b0000111
 
 #define R_TYPE_ENCODE(funct7, rs2, rs1, funct3, rd, opcode)                    \
-    ((funct7 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | \
-     (opcode))
+  ((funct7 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) |   \
+   (opcode))
 
 /// A DMA transfer identifier.
 typedef uint32_t snrt_dma_txid_t;
@@ -36,31 +36,31 @@ typedef uint32_t snrt_dma_txid_t;
  */
 inline uint32_t snrt_dma_start_1d_wideptr(uint64_t dst, uint64_t src,
                                           size_t size) {
-    register uint32_t reg_dst_low asm("a0") = dst >> 0;    // 10
-    register uint32_t reg_dst_high asm("a1") = dst >> 32;  // 11
-    register uint32_t reg_src_low asm("a2") = src >> 0;    // 12
-    register uint32_t reg_src_high asm("a3") = src >> 32;  // 13
-    register uint32_t reg_size asm("a4") = size;           // 14
+  register uint32_t reg_dst_low asm("a0") = dst >> 0;   // 10
+  register uint32_t reg_dst_high asm("a1") = dst >> 32; // 11
+  register uint32_t reg_src_low asm("a2") = src >> 0;   // 12
+  register uint32_t reg_src_high asm("a3") = src >> 32; // 13
+  register uint32_t reg_size asm("a4") = size;          // 14
 
-    // dmsrc a2, a3
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSRC_FUNCT7, 13, 12,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_src_high), "r"(reg_src_low));
+  // dmsrc a2, a3
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSRC_FUNCT7, 13, 12,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_src_high), "r"(reg_src_low));
 
-    // dmdst a0, a1
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMDST_FUNCT7, 11, 10,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_dst_high), "r"(reg_dst_low));
+  // dmdst a0, a1
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMDST_FUNCT7, 11, 10,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_dst_high), "r"(reg_dst_low));
 
-    // dmcpyi a0, a4, 0b00
-    register uint32_t reg_txid asm("a0");  // 10
-    asm volatile(".word %1\n"
-                 : "=r"(reg_txid)
-                 : "i"(R_TYPE_ENCODE(DMCPYI_FUNCT7, 0b00000, 14, XDMA_FUNCT3,
-                                     10, OP_CUSTOM1)),
-                   "r"(reg_size));
+  // dmcpyi a0, a4, 0b00
+  register uint32_t reg_txid asm("a0"); // 10
+  asm volatile(".word %1\n"
+               : "=r"(reg_txid)
+               : "i"(R_TYPE_ENCODE(DMCPYI_FUNCT7, 0b00000, 14, XDMA_FUNCT3, 10,
+                                   OP_CUSTOM1)),
+                 "r"(reg_size));
 
-    return reg_txid;
+  return reg_txid;
 }
 
 /**
@@ -72,7 +72,7 @@ inline uint32_t snrt_dma_start_1d_wideptr(uint64_t dst, uint64_t src,
  */
 inline snrt_dma_txid_t snrt_dma_start_1d(void *dst, const void *src,
                                          size_t size) {
-    return snrt_dma_start_1d_wideptr((size_t)dst, (size_t)src, size);
+  return snrt_dma_start_1d_wideptr((size_t)dst, (size_t)src, size);
 }
 
 /**
@@ -91,44 +91,44 @@ inline snrt_dma_txid_t snrt_dma_start_2d_wideptr(uint64_t dst, uint64_t src,
                                                  size_t size, size_t dst_stride,
                                                  size_t src_stride,
                                                  size_t repeat) {
-    register uint32_t reg_dst_low asm("a0") = dst >> 0;       // 10
-    register uint32_t reg_dst_high asm("a1") = dst >> 32;     // 11
-    register uint32_t reg_src_low asm("a2") = src >> 0;       // 12
-    register uint32_t reg_src_high asm("a3") = src >> 32;     // 13
-    register uint32_t reg_size asm("a4") = size;              // 14
-    register uint32_t reg_dst_stride asm("a5") = dst_stride;  // 15
-    register uint32_t reg_src_stride asm("a6") = src_stride;  // 16
-    register uint32_t reg_repeat asm("a7") = repeat;          // 17
+  register uint32_t reg_dst_low asm("a0") = dst >> 0;      // 10
+  register uint32_t reg_dst_high asm("a1") = dst >> 32;    // 11
+  register uint32_t reg_src_low asm("a2") = src >> 0;      // 12
+  register uint32_t reg_src_high asm("a3") = src >> 32;    // 13
+  register uint32_t reg_size asm("a4") = size;             // 14
+  register uint32_t reg_dst_stride asm("a5") = dst_stride; // 15
+  register uint32_t reg_src_stride asm("a6") = src_stride; // 16
+  register uint32_t reg_repeat asm("a7") = repeat;         // 17
 
-    // dmsrc a0, a1
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSRC_FUNCT7, 13, 12,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_src_high), "r"(reg_src_low));
+  // dmsrc a0, a1
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSRC_FUNCT7, 13, 12,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_src_high), "r"(reg_src_low));
 
-    // dmdst a0, a1
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMDST_FUNCT7, 11, 10,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_dst_high), "r"(reg_dst_low));
+  // dmdst a0, a1
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMDST_FUNCT7, 11, 10,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_dst_high), "r"(reg_dst_low));
 
-    // dmstr a5, a6
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSTR_FUNCT7, 15, 16,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_src_stride), "r"(reg_dst_stride));
+  // dmstr a5, a6
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSTR_FUNCT7, 15, 16,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_src_stride), "r"(reg_dst_stride));
 
-    // dmrep a7
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMREP_FUNCT7, 0, 17,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_repeat));
+  // dmrep a7
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMREP_FUNCT7, 0, 17,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_repeat));
 
-    // dmcpyi a0, a4, 0b10
-    register uint32_t reg_txid asm("a0");  // 10
-    asm volatile(".word %1\n"
-                 : "=r"(reg_txid)
-                 : "i"(R_TYPE_ENCODE(DMCPYI_FUNCT7, 0b00010, 14, XDMA_FUNCT3,
-                                     10, OP_CUSTOM1)),
-                   "r"(reg_size));
+  // dmcpyi a0, a4, 0b10
+  register uint32_t reg_txid asm("a0"); // 10
+  asm volatile(".word %1\n"
+               : "=r"(reg_txid)
+               : "i"(R_TYPE_ENCODE(DMCPYI_FUNCT7, 0b00010, 14, XDMA_FUNCT3, 10,
+                                   OP_CUSTOM1)),
+                 "r"(reg_size));
 
-    return reg_txid;
+  return reg_txid;
 }
 
 /**
@@ -146,8 +146,8 @@ inline snrt_dma_txid_t snrt_dma_start_2d_wideptr(uint64_t dst, uint64_t src,
 inline snrt_dma_txid_t snrt_dma_start_2d(void *dst, const void *src,
                                          size_t size, size_t dst_stride,
                                          size_t src_stride, size_t repeat) {
-    return snrt_dma_start_2d_wideptr((size_t)dst, (size_t)src, size, dst_stride,
-                                     src_stride, repeat);
+  return snrt_dma_start_2d_wideptr((size_t)dst, (size_t)src, size, dst_stride,
+                                   src_stride, repeat);
 }
 
 /**
@@ -163,32 +163,32 @@ inline snrt_dma_txid_t snrt_dma_start_1d_channel_wideptr(uint64_t dst,
                                                          uint64_t src,
                                                          size_t size,
                                                          uint32_t channel) {
-    register uint32_t reg_dst_low asm("a0") = dst >> 0;    // 10
-    register uint32_t reg_dst_high asm("a1") = dst >> 32;  // 11
-    register uint32_t reg_src_low asm("a2") = src >> 0;    // 12
-    register uint32_t reg_src_high asm("a3") = src >> 32;  // 13
-    register uint32_t reg_size asm("a4") = size;           // 14
-    register uint32_t cfg asm("a5") = channel << 2;        // 15
+  register uint32_t reg_dst_low asm("a0") = dst >> 0;   // 10
+  register uint32_t reg_dst_high asm("a1") = dst >> 32; // 11
+  register uint32_t reg_src_low asm("a2") = src >> 0;   // 12
+  register uint32_t reg_src_high asm("a3") = src >> 32; // 13
+  register uint32_t reg_size asm("a4") = size;          // 14
+  register uint32_t cfg asm("a5") = channel << 2;       // 15
 
-    // dmsrc a2, a3
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSRC_FUNCT7, 13, 12,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_src_high), "r"(reg_src_low));
+  // dmsrc a2, a3
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSRC_FUNCT7, 13, 12,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_src_high), "r"(reg_src_low));
 
-    // dmdst a0, a1
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMDST_FUNCT7, 11, 10,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_dst_high), "r"(reg_dst_low));
+  // dmdst a0, a1
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMDST_FUNCT7, 11, 10,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_dst_high), "r"(reg_dst_low));
 
-    // dmcpy a0, a4, a5
-    register uint32_t reg_txid asm("a0");  // 10
-    asm volatile(
-        ".word %1\n"
-        : "=r"(reg_txid)
-        : "i"(R_TYPE_ENCODE(DMCPY_FUNCT7, 15, 14, XDMA_FUNCT3, 10, OP_CUSTOM1)),
-          "r"(reg_size), "r"(cfg));
+  // dmcpy a0, a4, a5
+  register uint32_t reg_txid asm("a0"); // 10
+  asm volatile(
+      ".word %1\n"
+      : "=r"(reg_txid)
+      : "i"(R_TYPE_ENCODE(DMCPY_FUNCT7, 15, 14, XDMA_FUNCT3, 10, OP_CUSTOM1)),
+        "r"(reg_size), "r"(cfg));
 
-    return reg_txid;
+  return reg_txid;
 }
 
 /**
@@ -203,8 +203,8 @@ inline snrt_dma_txid_t snrt_dma_start_1d_channel_wideptr(uint64_t dst,
 inline snrt_dma_txid_t snrt_dma_start_1d_channel(void *dst, const void *src,
                                                  size_t size,
                                                  uint32_t channel) {
-    return snrt_dma_start_1d_channel_wideptr((size_t)dst, (size_t)src, size,
-                                             channel);
+  return snrt_dma_start_1d_channel_wideptr((size_t)dst, (size_t)src, size,
+                                           channel);
 }
 
 /**
@@ -221,48 +221,49 @@ inline snrt_dma_txid_t snrt_dma_start_1d_channel(void *dst, const void *src,
  * @param channel The index of the channel.
  * @return The DMA transfer ID.
  */
-inline snrt_dma_txid_t snrt_dma_start_2d_channel_wideptr(
-    uint64_t dst, uint64_t src, size_t size, size_t dst_stride,
-    size_t src_stride, size_t repeat, uint32_t channel) {
-    register uint32_t reg_dst_low asm("a0") = dst >> 0;       // 10
-    register uint32_t reg_dst_high asm("a1") = dst >> 32;     // 11
-    register uint32_t reg_src_low asm("a2") = src >> 0;       // 12
-    register uint32_t reg_src_high asm("a3") = src >> 32;     // 13
-    register uint32_t reg_size asm("a4") = size;              // 14
-    register uint32_t reg_dst_stride asm("a5") = dst_stride;  // 15
-    register uint32_t reg_src_stride asm("a6") = src_stride;  // 16
-    register uint32_t reg_repeat asm("a7") = repeat;          // 17
-    register uint32_t cfg asm("t2") = channel << 2 | 2;       // 7
+inline snrt_dma_txid_t
+snrt_dma_start_2d_channel_wideptr(uint64_t dst, uint64_t src, size_t size,
+                                  size_t dst_stride, size_t src_stride,
+                                  size_t repeat, uint32_t channel) {
+  register uint32_t reg_dst_low asm("a0") = dst >> 0;      // 10
+  register uint32_t reg_dst_high asm("a1") = dst >> 32;    // 11
+  register uint32_t reg_src_low asm("a2") = src >> 0;      // 12
+  register uint32_t reg_src_high asm("a3") = src >> 32;    // 13
+  register uint32_t reg_size asm("a4") = size;             // 14
+  register uint32_t reg_dst_stride asm("a5") = dst_stride; // 15
+  register uint32_t reg_src_stride asm("a6") = src_stride; // 16
+  register uint32_t reg_repeat asm("a7") = repeat;         // 17
+  register uint32_t cfg asm("t2") = channel << 2 | 2;      // 7
 
-    // dmsrc a0, a1
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSRC_FUNCT7, 13, 12,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_src_high), "r"(reg_src_low));
+  // dmsrc a0, a1
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSRC_FUNCT7, 13, 12,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_src_high), "r"(reg_src_low));
 
-    // dmdst a0, a1
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMDST_FUNCT7, 11, 10,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_dst_high), "r"(reg_dst_low));
+  // dmdst a0, a1
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMDST_FUNCT7, 11, 10,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_dst_high), "r"(reg_dst_low));
 
-    // dmstr a5, a6
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSTR_FUNCT7, 15, 16,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_src_stride), "r"(reg_dst_stride));
+  // dmstr a5, a6
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMSTR_FUNCT7, 15, 16,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_src_stride), "r"(reg_dst_stride));
 
-    // dmrep a7
-    asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMREP_FUNCT7, 0, 17,
-                                                  XDMA_FUNCT3, 0, OP_CUSTOM1)),
-                 "r"(reg_repeat));
+  // dmrep a7
+  asm volatile(".word %0\n" ::"i"(R_TYPE_ENCODE(DMREP_FUNCT7, 0, 17,
+                                                XDMA_FUNCT3, 0, OP_CUSTOM1)),
+               "r"(reg_repeat));
 
-    // dmcpy a0, a4, t2
-    register uint32_t reg_txid asm("a0");  // 10
-    asm volatile(
-        ".word %1\n"
-        : "=r"(reg_txid)
-        : "i"(R_TYPE_ENCODE(DMCPY_FUNCT7, 7, 14, XDMA_FUNCT3, 10, OP_CUSTOM1)),
-          "r"(cfg), "r"(reg_size));
+  // dmcpy a0, a4, t2
+  register uint32_t reg_txid asm("a0"); // 10
+  asm volatile(
+      ".word %1\n"
+      : "=r"(reg_txid)
+      : "i"(R_TYPE_ENCODE(DMCPY_FUNCT7, 7, 14, XDMA_FUNCT3, 10, OP_CUSTOM1)),
+        "r"(cfg), "r"(reg_size));
 
-    return reg_txid;
+  return reg_txid;
 }
 
 /**
@@ -284,9 +285,8 @@ inline snrt_dma_txid_t snrt_dma_start_2d_channel(void *dst, const void *src,
                                                  size_t src_stride,
                                                  size_t repeat,
                                                  uint32_t channel) {
-    return snrt_dma_start_2d_channel_wideptr((size_t)dst, (size_t)src, size,
-                                             dst_stride, src_stride, repeat,
-                                             channel);
+  return snrt_dma_start_2d_channel_wideptr(
+      (size_t)dst, (size_t)src, size, dst_stride, src_stride, repeat, channel);
 }
 
 /**
@@ -294,14 +294,13 @@ inline snrt_dma_txid_t snrt_dma_start_2d_channel(void *dst, const void *src,
  * @param dst The DMA transfer ID.
  */
 inline void snrt_dma_wait(snrt_dma_txid_t tid) {
-    // dmstati t0, 0  # 0=status.completed_id
-    asm volatile(
-        "1: \n"
-        ".word %0\n"
-        "bltu t0, %1, 1b \n" ::"i"(
-            R_TYPE_ENCODE(DMSTATI_FUNCT7, 0b00, 0, XDMA_FUNCT3, 5, OP_CUSTOM1)),
-        "r"(tid)
-        : "t0");
+  // dmstati t0, 0  # 0=status.completed_id
+  asm volatile("1: \n"
+               ".word %0\n"
+               "bltu t0, %1, 1b \n" ::"i"(R_TYPE_ENCODE(
+                   DMSTATI_FUNCT7, 0b00, 0, XDMA_FUNCT3, 5, OP_CUSTOM1)),
+               "r"(tid)
+               : "t0");
 }
 
 /**
@@ -309,29 +308,27 @@ inline void snrt_dma_wait(snrt_dma_txid_t tid) {
  * @param dst The DMA transfer ID.
  */
 inline void snrt_dma_wait_channel(snrt_dma_txid_t tid, uint32_t channel) {
-    // dmstati t0, 0  # 0=status.completed_id
-    register uint32_t cfg asm("t1") = channel << 2;
-    asm volatile(
-        "1: \n"
-        ".word %0\n"
-        "sub t0, t0, %1 \n"
-        "blez t0, 1b \n" ::"i"(
-            R_TYPE_ENCODE(DMSTAT_FUNCT7, 6, 0, XDMA_FUNCT3, 5, OP_CUSTOM1)),
-        "r"(tid), "r"(cfg)
-        : "t0");
+  // dmstati t0, 0  # 0=status.completed_id
+  register uint32_t cfg asm("t1") = channel << 2;
+  asm volatile("1: \n"
+               ".word %0\n"
+               "sub t0, t0, %1 \n"
+               "blez t0, 1b \n" ::"i"(R_TYPE_ENCODE(
+                   DMSTAT_FUNCT7, 6, 0, XDMA_FUNCT3, 5, OP_CUSTOM1)),
+               "r"(tid), "r"(cfg)
+               : "t0");
 }
 
 /**
  * @brief Block until all DMA operation ceases.
  */
 inline void snrt_dma_wait_all() {
-    // dmstati t0, 2  # 2=status.busy
-    asm volatile(
-        "1: \n"
-        ".word %0\n"
-        "bne t0, zero, 1b \n" ::"i"(
-            R_TYPE_ENCODE(DMSTATI_FUNCT7, 0b10, 0, XDMA_FUNCT3, 5, OP_CUSTOM1))
-        : "t0");
+  // dmstati t0, 2  # 2=status.busy
+  asm volatile("1: \n"
+               ".word %0\n"
+               "bne t0, zero, 1b \n" ::"i"(R_TYPE_ENCODE(
+                   DMSTATI_FUNCT7, 0b10, 0, XDMA_FUNCT3, 5, OP_CUSTOM1))
+               : "t0");
 }
 
 /**
@@ -339,16 +336,15 @@ inline void snrt_dma_wait_all() {
  * @param channel The index of the channel.
  */
 inline void snrt_dma_wait_all_channel(uint32_t channel) {
-    register uint32_t tmp;
-    // dmstati t0, 2  # 2=status.busy
-    register uint32_t cfg asm("t1") = channel << 2 | 2;
-    asm volatile(
-        "1: \n"
-        ".word %0\n"
-        "bne t0, zero, 1b \n" ::"i"(
-            R_TYPE_ENCODE(DMSTAT_FUNCT7, 6, 0, XDMA_FUNCT3, 5, OP_CUSTOM1)),
-        "r"(cfg)
-        : "t0");
+  register uint32_t tmp;
+  // dmstati t0, 2  # 2=status.busy
+  register uint32_t cfg asm("t1") = channel << 2 | 2;
+  asm volatile("1: \n"
+               ".word %0\n"
+               "bne t0, zero, 1b \n" ::"i"(R_TYPE_ENCODE(
+                   DMSTAT_FUNCT7, 6, 0, XDMA_FUNCT3, 5, OP_CUSTOM1)),
+               "r"(cfg)
+               : "t0");
 }
 
 /**
@@ -356,11 +352,11 @@ inline void snrt_dma_wait_all_channel(uint32_t channel) {
  * @param num_channels The number of channels to wait on.
  */
 inline void snrt_dma_wait_all_channels(uint32_t num_channels) {
-    register uint32_t tmp;
-    // dmstati t0, 2  # 2=status.busy
-    for (uint32_t c = 0; c < num_channels; c++) {
-        snrt_dma_wait_all_channel(c);
-    }
+  register uint32_t tmp;
+  // dmstati t0, 2  # 2=status.busy
+  for (uint32_t c = 0; c < num_channels; c++) {
+    snrt_dma_wait_all_channel(c);
+  }
 }
 
 /**
@@ -370,9 +366,9 @@ inline void snrt_dma_wait_all_channels(uint32_t num_channels) {
  * @deprecated
  */
 inline void snrt_dma_start_tracking() {
-    // dmstati zero, 0
-    asm volatile(".word %0\n" ::"i"(
-        R_TYPE_ENCODE(DMSTATI_FUNCT7, 0b00, 0, XDMA_FUNCT3, 0, OP_CUSTOM1)));
+  // dmstati zero, 0
+  asm volatile(".word %0\n" ::"i"(
+      R_TYPE_ENCODE(DMSTATI_FUNCT7, 0b00, 0, XDMA_FUNCT3, 0, OP_CUSTOM1)));
 }
 
 /**
@@ -382,8 +378,8 @@ inline void snrt_dma_start_tracking() {
  * @deprecated
  */
 inline void snrt_dma_stop_tracking() {
-    asm volatile(".word %0\n" ::"i"(
-        R_TYPE_ENCODE(DMSTATI_FUNCT7, 0b00, 0, XDMA_FUNCT3, 3, OP_CUSTOM1)));
+  asm volatile(".word %0\n" ::"i"(
+      R_TYPE_ENCODE(DMSTATI_FUNCT7, 0b00, 0, XDMA_FUNCT3, 3, OP_CUSTOM1)));
 }
 
 /**
@@ -393,18 +389,18 @@ inline void snrt_dma_stop_tracking() {
  * @param len Number of bytes, must be a multiple of the DMA bus width.
  */
 inline void snrt_dma_memset(void *ptr, uint8_t value, uint32_t len) {
-    // set first 64bytes to value
-    // memset(ptr, value, 64);
-    uint8_t *p = ptr;
-    uint32_t nbytes = 64;
-    while (nbytes--) {
-        *p++ = value;
-    }
+  // set first 64bytes to value
+  // memset(ptr, value, 64);
+  uint8_t *p = ptr;
+  uint32_t nbytes = 64;
+  while (nbytes--) {
+    *p++ = value;
+  }
 
-    // DMA copy the the rest
-    snrt_dma_txid_t memset_txid =
-        snrt_dma_start_2d(ptr, ptr, 64, 64, 0, len / 64);
-    snrt_dma_wait_all();
+  // DMA copy the the rest
+  snrt_dma_txid_t memset_txid =
+      snrt_dma_start_2d(ptr, ptr, 64, 64, 0, len / 64);
+  snrt_dma_wait_all();
 }
 
 /**
@@ -418,8 +414,8 @@ inline void snrt_dma_memset(void *ptr, uint8_t value, uint32_t len) {
 inline snrt_dma_txid_t snrt_dma_load_1d_tile(void *dst, void *src,
                                              size_t tile_idx, size_t tile_size,
                                              uint32_t prec) {
-    size_t tile_nbytes = tile_size * prec;
-    return snrt_dma_start_1d(dst, src + tile_idx * tile_nbytes, tile_nbytes);
+  size_t tile_nbytes = tile_size * prec;
+  return snrt_dma_start_1d(dst, src + tile_idx * tile_nbytes, tile_nbytes);
 }
 
 /**
@@ -433,8 +429,8 @@ inline snrt_dma_txid_t snrt_dma_load_1d_tile(void *dst, void *src,
 inline snrt_dma_txid_t snrt_dma_store_1d_tile(void *dst, void *src,
                                               size_t tile_idx, size_t tile_size,
                                               uint32_t prec) {
-    size_t tile_nbytes = tile_size * prec;
-    return snrt_dma_start_1d(dst + tile_idx * tile_nbytes, src, tile_nbytes);
+  size_t tile_nbytes = tile_size * prec;
+  return snrt_dma_start_1d(dst + tile_idx * tile_nbytes, src, tile_nbytes);
 }
 
 /**
@@ -451,23 +447,23 @@ inline snrt_dma_txid_t snrt_dma_store_1d_tile(void *dst, void *src,
  *                     array.
  * @param prec Number of bytes of each element in the 2D array.
  */
-inline snrt_dma_txid_t snrt_dma_load_2d_tile(
-    void *dst, void *src, size_t tile_x1_idx, size_t tile_x0_idx,
-    size_t tile_x1_size, size_t tile_x0_size, size_t full_x0_size,
-    uint32_t prec) {
-    size_t src_offset = 0;
-    // Advance src array in x0 and x1 dimensions, and convert to byte offset
-    src_offset += tile_x0_idx * tile_x0_size;
-    src_offset += tile_x1_idx * tile_x1_size * full_x0_size;
-    src_offset *= prec;
-    // Initiate transfer
-    return snrt_dma_start_2d(dst,                  // dst
-                             src + src_offset,     // src
-                             tile_x0_size * prec,  // size
-                             tile_x0_size * prec,  // dst_stride
-                             full_x0_size * prec,  // src_stride
-                             tile_x1_size          // repeat
-    );
+inline snrt_dma_txid_t
+snrt_dma_load_2d_tile(void *dst, void *src, size_t tile_x1_idx,
+                      size_t tile_x0_idx, size_t tile_x1_size,
+                      size_t tile_x0_size, size_t full_x0_size, uint32_t prec) {
+  size_t src_offset = 0;
+  // Advance src array in x0 and x1 dimensions, and convert to byte offset
+  src_offset += tile_x0_idx * tile_x0_size;
+  src_offset += tile_x1_idx * tile_x1_size * full_x0_size;
+  src_offset *= prec;
+  // Initiate transfer
+  return snrt_dma_start_2d(dst,                 // dst
+                           src + src_offset,    // src
+                           tile_x0_size * prec, // size
+                           tile_x0_size * prec, // dst_stride
+                           full_x0_size * prec, // src_stride
+                           tile_x1_size         // repeat
+  );
 }
 
 /**
@@ -484,21 +480,22 @@ inline snrt_dma_txid_t snrt_dma_load_2d_tile(
  *                     array.
  * @param prec Number of bytes of each element in the 2D array.
  */
-inline snrt_dma_txid_t snrt_dma_store_2d_tile(
-    void *dst, void *src, size_t tile_x1_idx, size_t tile_x0_idx,
-    size_t tile_x1_size, size_t tile_x0_size, size_t full_x0_size,
-    uint32_t prec) {
-    size_t dst_offset = 0;
-    // Advance dst array in x0 and x1 dimensions, and convert to byte offset
-    dst_offset += tile_x0_idx * tile_x0_size;
-    dst_offset += tile_x1_idx * tile_x1_size * full_x0_size;
-    dst_offset *= prec;
-    // Initiate transfer
-    return snrt_dma_start_2d(dst + dst_offset,     // dst
-                             src,                  // src
-                             tile_x0_size * prec,  // size
-                             full_x0_size * prec,  // dst_stride
-                             tile_x0_size * prec,  // src_stride
-                             tile_x1_size          // repeat
-    );
+inline snrt_dma_txid_t
+snrt_dma_store_2d_tile(void *dst, void *src, size_t tile_x1_idx,
+                       size_t tile_x0_idx, size_t tile_x1_size,
+                       size_t tile_x0_size, size_t full_x0_size,
+                       uint32_t prec) {
+  size_t dst_offset = 0;
+  // Advance dst array in x0 and x1 dimensions, and convert to byte offset
+  dst_offset += tile_x0_idx * tile_x0_size;
+  dst_offset += tile_x1_idx * tile_x1_size * full_x0_size;
+  dst_offset *= prec;
+  // Initiate transfer
+  return snrt_dma_start_2d(dst + dst_offset,    // dst
+                           src,                 // src
+                           tile_x0_size * prec, // size
+                           full_x0_size * prec, // dst_stride
+                           tile_x0_size * prec, // src_stride
+                           tile_x1_size         // repeat
+  );
 }

@@ -9,8 +9,8 @@
 #include "alloc_decls.h"
 
 typedef struct {
-    uint32_t hw_barrier;
-    snrt_allocator_t l1_allocator;
+  uint32_t hw_barrier;
+  snrt_allocator_t l1_allocator;
 } cls_t;
 
-static inline cls_t* cls();
+static inline cls_t *cls();

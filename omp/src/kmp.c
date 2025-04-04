@@ -4,13 +4,13 @@
 
 #include "kmp.h"
 
-#include <inttypes.h>  // for PRIx##
+#include <inttypes.h> // for PRIx##
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "riscv-opcodes/encoding.h"
 #include "omp.h"
+#include "riscv-opcodes/encoding.h"
 
 typedef void (*__task_type32)(_kmp_ptr32, _kmp_ptr32, _kmp_ptr32);
 typedef void (*__task_type64)(_kmp_ptr64, _kmp_ptr64, _kmp_ptr64);
@@ -25,72 +25,69 @@ typedef void (*__task_type64)(_kmp_ptr64, _kmp_ptr64, _kmp_ptr64);
 _kmp_ptr32 *kmpc_args;
 
 static void __microtask_wrapper(void *arg, uint32_t argc) {
-    kmp_int32 id = omp_get_thread_num();
-    kmp_int32 *id_addr = (kmp_int32 *)(&id);
+  kmp_int32 id = omp_get_thread_num();
+  kmp_int32 *id_addr = (kmp_int32 *)(&id);
 
-    // first element in args is the function pointer
-    kmpc_micro fn = (kmpc_micro)((_kmp_ptr32 *)arg)[0];
-    // second element in args is the pointer to the argument vector
-    _kmp_ptr32 *p_argv = &((_kmp_ptr32 *)arg)[1];
-    kmp_int32 gtid = id;
+  // first element in args is the function pointer
+  kmpc_micro fn = (kmpc_micro)((_kmp_ptr32 *)arg)[0];
+  // second element in args is the pointer to the argument vector
+  _kmp_ptr32 *p_argv = &((_kmp_ptr32 *)arg)[1];
+  kmp_int32 gtid = id;
 
-    uint32_t cycle = read_csr(mcycle);
-    OMP_PROF(if (snrt_hartid() == 1) omp_prof->fork_oh =
-                 cycle - omp_prof->fork_oh);
+  uint32_t cycle = read_csr(mcycle);
+  OMP_PROF(if (snrt_hartid() == 1) omp_prof->fork_oh =
+               cycle - omp_prof->fork_oh);
 
-    switch (argc) {
-        default:
-            // printf("Too many args to __microtask_wrapper: %d!\n", argc);
-            snrt_exit(-1);
-        case 0:
-            fn(&gtid, id_addr);
-            break;
-        case 1:
-            fn(&gtid, id_addr, p_argv[0]);
-            break;
-        case 2:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1]);
-            break;
-        case 3:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2]);
-            break;
-        case 4:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3]);
-            break;
-        case 5:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4]);
-            break;
-        case 6:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5]);
-            break;
-        case 7:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6]);
-            break;
-        case 8:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7]);
-        case 9:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8]);
-        case 10:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8],
-               p_argv[9]);
-        case 11:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8], p_argv[9],
-               p_argv[10]);
-        case 12:
-            fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3],
-               p_argv[4], p_argv[5], p_argv[6], p_argv[7], p_argv[8], p_argv[9],
-               p_argv[10], p_argv[11]);
-            break;
-    }
-    // for performance tracking in traces
-    cycle = read_csr(mcycle);
+  switch (argc) {
+  default:
+    // printf("Too many args to __microtask_wrapper: %d!\n", argc);
+    snrt_exit(-1);
+  case 0:
+    fn(&gtid, id_addr);
+    break;
+  case 1:
+    fn(&gtid, id_addr, p_argv[0]);
+    break;
+  case 2:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1]);
+    break;
+  case 3:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2]);
+    break;
+  case 4:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3]);
+    break;
+  case 5:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3], p_argv[4]);
+    break;
+  case 6:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3], p_argv[4],
+       p_argv[5]);
+    break;
+  case 7:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3], p_argv[4],
+       p_argv[5], p_argv[6]);
+    break;
+  case 8:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3], p_argv[4],
+       p_argv[5], p_argv[6], p_argv[7]);
+  case 9:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3], p_argv[4],
+       p_argv[5], p_argv[6], p_argv[7], p_argv[8]);
+  case 10:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3], p_argv[4],
+       p_argv[5], p_argv[6], p_argv[7], p_argv[8], p_argv[9]);
+  case 11:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3], p_argv[4],
+       p_argv[5], p_argv[6], p_argv[7], p_argv[8], p_argv[9], p_argv[10]);
+  case 12:
+    fn(&gtid, id_addr, p_argv[0], p_argv[1], p_argv[2], p_argv[3], p_argv[4],
+       p_argv[5], p_argv[6], p_argv[7], p_argv[8], p_argv[9], p_argv[10],
+       p_argv[11]);
+    break;
+  }
+  // for performance tracking in traces
+  cycle = read_csr(mcycle);
 }
 
 /*!
@@ -120,12 +117,12 @@ OpenMP thread ids returned by omp_get_thread_num()).
 // }
 
 void __kmpc_barrier(ident_t *loc, kmp_int32 tid) {
-    (void)loc;
-    (void)tid;
-    _OMP_T *_this = omp_getData();
-    uint32_t ret;
-    KMP_PRINTF(50, "barrier numThreads: %d\n", (uint32_t)_this->numThreads);
-    snrt_partial_barrier(_this->kmpc_barrier, (uint32_t)_this->numThreads);
+  (void)loc;
+  (void)tid;
+  _OMP_T *_this = omp_getData();
+  uint32_t ret;
+  KMP_PRINTF(50, "barrier numThreads: %d\n", (uint32_t)_this->numThreads);
+  snrt_partial_barrier(_this->kmpc_barrier, (uint32_t)_this->numThreads);
 }
 
 /*!
@@ -164,49 +161,49 @@ construct
 Do the actual fork and call the microtask in the relevant number of threads.
 */
 void __kmpc_fork_call(ident_t *loc, kmp_int32 argc, kmpc_micro microtask, ...) {
-    (void)loc;
-    _OMP_T *omp = omp_getData();
+  (void)loc;
+  _OMP_T *omp = omp_getData();
 
-    OMP_PROF(omp_prof->fork_oh = read_csr(mcycle));
+  OMP_PROF(omp_prof->fork_oh = read_csr(mcycle));
 
-    va_list vl;
-    int arg_size = 0;
-    arg_size = (argc + 1) * sizeof(_kmp_ptr32);
+  va_list vl;
+  int arg_size = 0;
+  arg_size = (argc + 1) * sizeof(_kmp_ptr32);
 
-    // Do not alloc for argument pointers but use the statically alllocated
-    // kmpc_args
-    // void *args = rt_malloc(arg_size); for(int i = 0; i < arg_size;
-    // i ++) ((uint8_t*)args)[i]=0;
-    // first element holds pointer to the microtask
-    kmpc_args[0] = (_kmp_ptr32)microtask;
-    // copy remaining varargs
-    va_start(vl, microtask);
-    for (int i = 1; i <= argc; ++i) {
-        kmpc_args[i] = (_kmp_ptr32)va_arg(vl, _kmp_ptr32);
-    }
-    va_end(vl);
+  // Do not alloc for argument pointers but use the statically alllocated
+  // kmpc_args
+  // void *args = rt_malloc(arg_size); for(int i = 0; i < arg_size;
+  // i ++) ((uint8_t*)args)[i]=0;
+  // first element holds pointer to the microtask
+  kmpc_args[0] = (_kmp_ptr32)microtask;
+  // copy remaining varargs
+  va_start(vl, microtask);
+  for (int i = 1; i <= argc; ++i) {
+    kmpc_args[i] = (_kmp_ptr32)va_arg(vl, _kmp_ptr32);
+  }
+  va_end(vl);
 
-    KMP_PRINTF(10,
-               "__kmpc_fork_call: argc=%d numthreads=%d omp->numThreads=%d "
-               "microtask @%#x\n",
-               argc, omp->numThreads, omp->numThreads, (uint32_t)microtask);
+  KMP_PRINTF(10,
+             "__kmpc_fork_call: argc=%d numthreads=%d omp->numThreads=%d "
+             "microtask @%#x\n",
+             argc, omp->numThreads, omp->numThreads, (uint32_t)microtask);
 
-    /// a worker enters this fork call: this means nested parallelism
-    if (snrt_cluster_core_idx() != 0) {
-        KMP_PRINTF(0, "error: nested parallelism\n");
-        snrt_exit(-1);
-        /// TODO: This almost works. The problem is, that the current task in
-        /// the EU is not yet completed (due to this thread forking). Correctly,
-        /// this thread woul re-enter the event queue, run the newly dispatched
-        /// thread and then return to this thread. If this is not done, the
-        /// nested parallelism is not executed in the correct order
-        (void)eu_dispatch_push(__microtask_wrapper, argc, kmpc_args,
-                               omp->numThreads);
-    } else {
-        parallelRegion(argc, kmpc_args, __microtask_wrapper, omp->numThreads);
-    }
+  /// a worker enters this fork call: this means nested parallelism
+  if (snrt_cluster_core_idx() != 0) {
+    KMP_PRINTF(0, "error: nested parallelism\n");
+    snrt_exit(-1);
+    /// TODO: This almost works. The problem is, that the current task in
+    /// the EU is not yet completed (due to this thread forking). Correctly,
+    /// this thread woul re-enter the event queue, run the newly dispatched
+    /// thread and then return to this thread. If this is not done, the
+    /// nested parallelism is not executed in the correct order
+    (void)eu_dispatch_push(__microtask_wrapper, argc, kmpc_args,
+                           omp->numThreads);
+  } else {
+    parallelRegion(argc, kmpc_args, __microtask_wrapper, omp->numThreads);
+  }
 
-    // rt_free(args);
+  // rt_free(args);
 }
 
 /*!
@@ -235,61 +232,61 @@ void __kmpc_for_static_init_4(ident_t *loc, kmp_int32 gtid,
                               kmp_int32 *plower, kmp_int32 *pupper,
                               kmp_int32 *pstride, kmp_int32 incr,
                               kmp_int32 chunk) {
-    (void)loc;
-    (void)gtid;
-    _OMP_T *omp = omp_getData();
-    _OMP_TEAM_T *team = omp_get_team(omp);
-    unsigned threadNum = omp_get_thread_num();
-    kmp_uint32 loopSize = (*pupper - *plower) / incr + 1;
-    kmp_int32 globalUpper = *pupper;
+  (void)loc;
+  (void)gtid;
+  _OMP_T *omp = omp_getData();
+  _OMP_TEAM_T *team = omp_get_team(omp);
+  unsigned threadNum = omp_get_thread_num();
+  kmp_uint32 loopSize = (*pupper - *plower) / incr + 1;
+  kmp_int32 globalUpper = *pupper;
 
-    KMP_PRINTF(50,
-               "__kmpc_for_static_init_4 gtid %d schedtype %d plast %#x"
-               "p[%#x, "
-               "%#x, %#x] incr %d chunk %d\n",
-               gtid, sched, (uint32_t)plastiter, (uint32_t)plower,
-               (uint32_t)pupper, (uint32_t)pstride, incr, chunk);
-    KMP_PRINTF(50, "    plast %4d p[%4d, %4d, %4d]\n", *plastiter, *plower,
-               *pupper, *pstride);
-    KMP_PRINTF(50, "    loopsize %d\n", loopSize);
+  KMP_PRINTF(50,
+             "__kmpc_for_static_init_4 gtid %d schedtype %d plast %#x"
+             "p[%#x, "
+             "%#x, %#x] incr %d chunk %d\n",
+             gtid, sched, (uint32_t)plastiter, (uint32_t)plower,
+             (uint32_t)pupper, (uint32_t)pstride, incr, chunk);
+  KMP_PRINTF(50, "    plast %4d p[%4d, %4d, %4d]\n", *plastiter, *plower,
+             *pupper, *pstride);
+  KMP_PRINTF(50, "    loopsize %d\n", loopSize);
 
-    // chunk size is specified
-    if (sched == kmp_sch_static_chunked) {
-        KMP_PRINTF(50, "    sched: static_chunked\n");
-        int span = incr * chunk;
-        *pstride = span * team->nbThreads;
-        *plower = *plower + span * threadNum;
-        *pupper = *plower + span - incr;
-        int beginLastChunk = globalUpper - (globalUpper % span);
-        *plastiter = ((beginLastChunk - *plower) % *pstride) == 0;
-    }
+  // chunk size is specified
+  if (sched == kmp_sch_static_chunked) {
+    KMP_PRINTF(50, "    sched: static_chunked\n");
+    int span = incr * chunk;
+    *pstride = span * team->nbThreads;
+    *plower = *plower + span * threadNum;
+    *pupper = *plower + span - incr;
+    int beginLastChunk = globalUpper - (globalUpper % span);
+    *plastiter = ((beginLastChunk - *plower) % *pstride) == 0;
+  }
 
-    // no specified chunk size
-    else if (sched == kmp_sch_static) {
-        KMP_PRINTF(50, "    sched: static\n");
-        chunk = loopSize / team->nbThreads;
-        int leftOver = loopSize - chunk * team->nbThreads;
+  // no specified chunk size
+  else if (sched == kmp_sch_static) {
+    KMP_PRINTF(50, "    sched: static\n");
+    chunk = loopSize / team->nbThreads;
+    int leftOver = loopSize - chunk * team->nbThreads;
 
-        // calculate precise chunk size and lower and upper bound
-        if ((int)threadNum < leftOver) {
-            chunk++;
-            *plower = *plower + threadNum * chunk * incr;
-        } else
-            *plower = *plower + threadNum * chunk * incr + leftOver;
-        *pupper = *plower + chunk * incr - incr;
+    // calculate precise chunk size and lower and upper bound
+    if ((int)threadNum < leftOver) {
+      chunk++;
+      *plower = *plower + threadNum * chunk * incr;
+    } else
+      *plower = *plower + threadNum * chunk * incr + leftOver;
+    *pupper = *plower + chunk * incr - incr;
 
-        if (plastiter != NULL)
-            *plastiter = (*pupper == globalUpper && *plower <= globalUpper);
-        *pstride = loopSize;
+    if (plastiter != NULL)
+      *plastiter = (*pupper == globalUpper && *plower <= globalUpper);
+    *pstride = loopSize;
 
-        KMP_PRINTF(50, "    team thds: %d chunk: %d leftOver: %d\n",
-                   team->nbThreads, chunk, leftOver);
-    }
+    KMP_PRINTF(50, "    team thds: %d chunk: %d leftOver: %d\n",
+               team->nbThreads, chunk, leftOver);
+  }
 
-    KMP_PRINTF(10,
-               "__kmpc_for_static_init_4 plast %4d p[l %4d, u %4d, i %4d, str"
-               "%4d] chunk %d\n",
-               *plastiter, *plower, *pupper, incr, *pstride, chunk);
+  KMP_PRINTF(10,
+             "__kmpc_for_static_init_4 plast %4d p[l %4d, u %4d, i %4d, str"
+             "%4d] chunk %d\n",
+             *plastiter, *plower, *pupper, incr, *pstride, chunk);
 }
 
 /*!
@@ -300,21 +297,21 @@ void __kmpc_for_static_init_4u(ident_t *loc, kmp_int32 gtid,
                                kmp_uint32 *plower, kmp_uint32 *pupper,
                                kmp_int32 *pstride, kmp_int32 incr,
                                kmp_int32 chunk) {
-    kmp_int32 ilower = *plower;
-    kmp_int32 iupper = *pupper;
-    __kmpc_for_static_init_4(loc, gtid, schedtype, plastiter, &ilower, &iupper,
-                             pstride, incr, chunk);
-    *plower = ilower;
-    *pupper = iupper;
+  kmp_int32 ilower = *plower;
+  kmp_int32 iupper = *pupper;
+  __kmpc_for_static_init_4(loc, gtid, schedtype, plastiter, &ilower, &iupper,
+                           pstride, incr, chunk);
+  *plower = ilower;
+  *pupper = iupper;
 }
 
 void __kmpc_for_static_fini(ident_t *loc, kmp_int32 globaltid) {
-    (void)loc;
-    (void)globaltid;
-    KMP_PRINTF(10, "__kmpc_for_static_fini\n");
-    // TODO: Implement
-    // omp_t *omp = omp_getData();
-    // doBarrier(getTeam(omp));
+  (void)loc;
+  (void)globaltid;
+  KMP_PRINTF(10, "__kmpc_for_static_fini\n");
+  // TODO: Implement
+  // omp_t *omp = omp_getData();
+  // doBarrier(getTeam(omp));
 }
 
 // void __kmpc_for_static_init_8u(ident_t *loc, kmp_int32 gtid, kmp_int32 sched,
@@ -510,4 +507,4 @@ See @ref __kmpc_dispatch_next_4
 //     p_st); *p_lb = p_lbi; *p_ub = p_ubi; return ret;
 // }
 
-#endif  // #ifndef OMPSTATIC_NUMTHREADS
+#endif // #ifndef OMPSTATIC_NUMTHREADS

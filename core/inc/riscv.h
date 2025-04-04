@@ -17,9 +17,9 @@ inline void snrt_wfi() { asm volatile("wfi"); }
 inline void snrt_nop() { asm volatile("nop" : : :); }
 
 inline uint32_t snrt_mcycle() {
-    uint32_t register r;
-    asm volatile("csrr %0, mcycle" : "=r"(r) : : "memory");
-    return r;
+  uint32_t register r;
+  asm volatile("csrr %0, mcycle" : "=r"(r) : : "memory");
+  return r;
 }
 
 /**
@@ -47,12 +47,12 @@ inline void snrt_interrupt_disable(uint32_t irq) { clear_csr(mie, 1 << irq); }
  * execution. Enable interrupt sources with snrt_interrupt_enable
  */
 inline void snrt_interrupt_global_enable(void) {
-    set_csr(mstatus, MSTATUS_MIE);  // set M global interrupt enable
+  set_csr(mstatus, MSTATUS_MIE); // set M global interrupt enable
 }
 /**
  * @brief Globally disable interrupts
  * @details
  */
 inline void snrt_interrupt_global_disable(void) {
-    clear_csr(mstatus, MSTATUS_MIE);
+  clear_csr(mstatus, MSTATUS_MIE);
 }

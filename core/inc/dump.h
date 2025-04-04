@@ -19,9 +19,9 @@
 
 #pragma once
 
-#define NAMED_DUMP(type, name, reg)                                           \
-    static __attribute__((always_inline)) inline void dump_##name(type val) { \
-        asm volatile("csrw " #reg ", %0" ::"rK"(val));                        \
-    }
+#define NAMED_DUMP(type, name, reg)                                            \
+  static __attribute__((always_inline)) inline void dump_##name(type val) {    \
+    asm volatile("csrw " #reg ", %0" ::"rK"(val));                             \
+  }
 
 #define DUMP(val) ({ asm volatile("csrw 0x7C3, %0" ::"rK"(val)); })

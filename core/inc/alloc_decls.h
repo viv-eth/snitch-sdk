@@ -8,12 +8,12 @@
 #include <stdint.h>
 
 typedef struct {
-    // Base address from where allocation starts
-    uint32_t base;
-    // End address up to which allocation is allowed
-    uint32_t end;
-    // Address of the next allocated block
-    uint32_t next;
+  // Base address from where allocation starts
+  uint32_t base;
+  // End address up to which allocation is allowed
+  uint32_t end;
+  // Address of the next allocated block
+  uint32_t next;
 } snrt_allocator_t;
 
 static inline void *snrt_l1_next();

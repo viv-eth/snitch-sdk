@@ -16,8 +16,8 @@
 extern volatile uint32_t tohost;
 
 #ifndef OPENOCD_SEMIHOSTING
-static inline volatile uint32_t* snrt_exit_code_destination() {
-    return (volatile uint32_t*)&tohost;
+static inline volatile uint32_t *snrt_exit_code_destination() {
+  return (volatile uint32_t *)&tohost;
 }
 #endif
 

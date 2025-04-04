@@ -49,7 +49,8 @@ html_static_path = ['_static']
 # See: https://breathe.readthedocs.io/en/latest/
 
 breathe_projects = {
-    "snitch_sdk": "../_build_doxygen/xml",  # Adjust this path based on your Doxygen output
+    "snitch_sdk":
+    "../_build_doxygen/xml",  # Adjust this path based on your Doxygen output
 }
 breathe_default_project = "snitch_sdk"
 
@@ -63,9 +64,10 @@ todo_include_todos = True
 branch = os.popen("git rev-parse --abbrev-ref HEAD").read().strip()
 
 html_context = {
-    'current_version': f"{branch}",
+    'current_version':
+    f"{branch}",
     'versions': [
-         ["master", "https://pulp-platform.github.io/snitch-sdk/"],
-         ["devel", "https://pulp-platform.github.io/snitch-sdk/branch/devel/"],
+        ["master", "https://pulp-platform.github.io/snitch-sdk/"],
+        ["devel", "https://pulp-platform.github.io/snitch-sdk/branch/devel/"],
     ],
 }

@@ -24,43 +24,42 @@
  * @brief Synchronize the integer and float pipelines.
  */
 inline void snrt_fpu_fence() {
-    unsigned tmp;
-    asm volatile(
-        "fmv.x.w %0, fa0\n"
-        "mv      %0, %0\n"
-        : "+r"(tmp)::"memory");
+  unsigned tmp;
+  asm volatile("fmv.x.w %0, fa0\n"
+               "mv      %0, %0\n"
+               : "+r"(tmp)::"memory");
 }
 
 /**
  * @brief The different SSRs.
  */
 enum snrt_ssr_dm {
-    SNRT_SSR_DM0 = 0,    /**< SSR data mover 0 */
-    SNRT_SSR_DM1 = 1,    /**< SSR data mover 1 */
-    SNRT_SSR_DM2 = 2,    /**< SSR data mover 2 */
-    SNRT_SSR_DM_ALL = 31 /**< Write to all SSRs */
+  SNRT_SSR_DM0 = 0,    /**< SSR data mover 0 */
+  SNRT_SSR_DM1 = 1,    /**< SSR data mover 1 */
+  SNRT_SSR_DM2 = 2,    /**< SSR data mover 2 */
+  SNRT_SSR_DM_ALL = 31 /**< Write to all SSRs */
 };
 
 /**
  * @brief The different dimensions.
  */
 enum snrt_ssr_dim {
-    SNRT_SSR_1D = 0, /**< 1D stream */
-    SNRT_SSR_2D = 1, /**< 2D stream */
-    SNRT_SSR_3D = 2, /**< 3D stream */
-    SNRT_SSR_4D = 3  /**< 4D stream */
+  SNRT_SSR_1D = 0, /**< 1D stream */
+  SNRT_SSR_2D = 1, /**< 2D stream */
+  SNRT_SSR_3D = 2, /**< 3D stream */
+  SNRT_SSR_4D = 3  /**< 4D stream */
 };
 
 /**
  * @brief The SSR configuration registers.
  */
 enum {
-    REG_STATUS = 0,  /**< SSR status register */
-    REG_REPEAT = 1,  /**< SSR repeat register */
-    REG_BOUNDS = 2,  /**< SSR bounds register */
-    REG_STRIDES = 6, /**< SSR strides register */
-    REG_RPTR = 24,   /**< SSR read pointer register */
-    REG_WPTR = 28    /**< SSR write pointer register */
+  REG_STATUS = 0,  /**< SSR status register */
+  REG_REPEAT = 1,  /**< SSR repeat register */
+  REG_BOUNDS = 2,  /**< SSR bounds register */
+  REG_STRIDES = 6, /**< SSR strides register */
+  REG_RPTR = 24,   /**< SSR read pointer register */
+  REG_WPTR = 28    /**< SSR write pointer register */
 };
 
 /**
@@ -68,9 +67,9 @@ enum {
  */
 inline void snrt_ssr_enable() {
 #ifdef __TOOLCHAIN_LLVM__
-    __builtin_ssr_enable();
+  __builtin_ssr_enable();
 #else
-    asm volatile("csrsi 0x7C0, 1\n");
+  asm volatile("csrsi 0x7C0, 1\n");
 #endif
 }
 
@@ -79,9 +78,9 @@ inline void snrt_ssr_enable() {
  */
 inline void snrt_ssr_disable() {
 #ifdef __TOOLCHAIN_LLVM__
-    __builtin_ssr_disable();
+  __builtin_ssr_disable();
 #else
-    asm volatile("csrci 0x7C0, 1\n");
+  asm volatile("csrci 0x7C0, 1\n");
 #endif
 }
 
@@ -92,11 +91,11 @@ inline void snrt_ssr_disable() {
  * @return The value of the register.
  */
 inline uint32_t read_ssr_cfg(uint32_t reg, uint32_t dm) {
-    uint32_t value;
-    asm volatile("scfgri %[value], %[dm] | %[reg]<<5\n"
-                 : [ value ] "=r"(value)
-                 : [ dm ] "i"(dm), [ reg ] "i"(reg));
-    return value;
+  uint32_t value;
+  asm volatile("scfgri %[value], %[dm] | %[reg]<<5\n"
+               : [value] "=r"(value)
+               : [dm] "i"(dm), [reg] "i"(reg));
+  return value;
 }
 
 /**
@@ -106,8 +105,8 @@ inline uint32_t read_ssr_cfg(uint32_t reg, uint32_t dm) {
  * @param value The value to write.
  */
 inline void write_ssr_cfg(uint32_t reg, uint32_t dm, uint32_t value) {
-    asm volatile("scfgwi %[value], %[dm] | %[reg]<<5\n" ::[value] "r"(value),
-                 [ dm ] "i"(dm), [ reg ] "i"(reg));
+  asm volatile("scfgwi %[value], %[dm] | %[reg]<<5\n" ::[value] "r"(value),
+               [dm] "i"(dm), [reg] "i"(reg));
 }
 
 /**
@@ -117,11 +116,11 @@ inline void write_ssr_cfg(uint32_t reg, uint32_t dm, uint32_t value) {
  * @param s0 The stride of the loop.
  */
 inline void snrt_ssr_loop_1d(enum snrt_ssr_dm dm, size_t b0, size_t s0) {
-    --b0;
-    write_ssr_cfg(REG_BOUNDS + 0, dm, b0);
-    size_t a = 0;
-    write_ssr_cfg(REG_STRIDES + 0, dm, s0 - a);
-    a += s0 * b0;
+  --b0;
+  write_ssr_cfg(REG_BOUNDS + 0, dm, b0);
+  size_t a = 0;
+  write_ssr_cfg(REG_STRIDES + 0, dm, s0 - a);
+  a += s0 * b0;
 }
 
 /**
@@ -134,15 +133,15 @@ inline void snrt_ssr_loop_1d(enum snrt_ssr_dm dm, size_t b0, size_t s0) {
  */
 inline void snrt_ssr_loop_2d(enum snrt_ssr_dm dm, size_t b0, size_t b1,
                              size_t s0, size_t s1) {
-    --b0;
-    --b1;
-    write_ssr_cfg(REG_BOUNDS + 0, dm, b0);
-    write_ssr_cfg(REG_BOUNDS + 1, dm, b1);
-    size_t a = 0;
-    write_ssr_cfg(REG_STRIDES + 0, dm, s0 - a);
-    a += s0 * b0;
-    write_ssr_cfg(REG_STRIDES + 1, dm, s1 - a);
-    a += s1 * b1;
+  --b0;
+  --b1;
+  write_ssr_cfg(REG_BOUNDS + 0, dm, b0);
+  write_ssr_cfg(REG_BOUNDS + 1, dm, b1);
+  size_t a = 0;
+  write_ssr_cfg(REG_STRIDES + 0, dm, s0 - a);
+  a += s0 * b0;
+  write_ssr_cfg(REG_STRIDES + 1, dm, s1 - a);
+  a += s1 * b1;
 }
 
 /**
@@ -157,19 +156,19 @@ inline void snrt_ssr_loop_2d(enum snrt_ssr_dm dm, size_t b0, size_t b1,
  */
 inline void snrt_ssr_loop_3d(enum snrt_ssr_dm dm, size_t b0, size_t b1,
                              size_t b2, size_t s0, size_t s1, size_t s2) {
-    --b0;
-    --b1;
-    --b2;
-    write_ssr_cfg(REG_BOUNDS + 0, dm, b0);
-    write_ssr_cfg(REG_BOUNDS + 1, dm, b1);
-    write_ssr_cfg(REG_BOUNDS + 2, dm, b2);
-    size_t a = 0;
-    write_ssr_cfg(REG_STRIDES + 0, dm, s0 - a);
-    a += s0 * b0;
-    write_ssr_cfg(REG_STRIDES + 1, dm, s1 - a);
-    a += s1 * b1;
-    write_ssr_cfg(REG_STRIDES + 2, dm, s2 - a);
-    a += s2 * b2;
+  --b0;
+  --b1;
+  --b2;
+  write_ssr_cfg(REG_BOUNDS + 0, dm, b0);
+  write_ssr_cfg(REG_BOUNDS + 1, dm, b1);
+  write_ssr_cfg(REG_BOUNDS + 2, dm, b2);
+  size_t a = 0;
+  write_ssr_cfg(REG_STRIDES + 0, dm, s0 - a);
+  a += s0 * b0;
+  write_ssr_cfg(REG_STRIDES + 1, dm, s1 - a);
+  a += s1 * b1;
+  write_ssr_cfg(REG_STRIDES + 2, dm, s2 - a);
+  a += s2 * b2;
 }
 
 /**
@@ -187,23 +186,23 @@ inline void snrt_ssr_loop_3d(enum snrt_ssr_dm dm, size_t b0, size_t b1,
 inline void snrt_ssr_loop_4d(enum snrt_ssr_dm dm, size_t b0, size_t b1,
                              size_t b2, size_t b3, size_t s0, size_t s1,
                              size_t s2, size_t s3) {
-    --b0;
-    --b1;
-    --b2;
-    --b3;
-    write_ssr_cfg(REG_BOUNDS + 0, dm, b0);
-    write_ssr_cfg(REG_BOUNDS + 1, dm, b1);
-    write_ssr_cfg(REG_BOUNDS + 2, dm, b2);
-    write_ssr_cfg(REG_BOUNDS + 3, dm, b3);
-    size_t a = 0;
-    write_ssr_cfg(REG_STRIDES + 0, dm, s0 - a);
-    a += s0 * b0;
-    write_ssr_cfg(REG_STRIDES + 1, dm, s1 - a);
-    a += s1 * b1;
-    write_ssr_cfg(REG_STRIDES + 2, dm, s2 - a);
-    a += s2 * b2;
-    write_ssr_cfg(REG_STRIDES + 3, dm, s3 - a);
-    a += s3 * b3;
+  --b0;
+  --b1;
+  --b2;
+  --b3;
+  write_ssr_cfg(REG_BOUNDS + 0, dm, b0);
+  write_ssr_cfg(REG_BOUNDS + 1, dm, b1);
+  write_ssr_cfg(REG_BOUNDS + 2, dm, b2);
+  write_ssr_cfg(REG_BOUNDS + 3, dm, b3);
+  size_t a = 0;
+  write_ssr_cfg(REG_STRIDES + 0, dm, s0 - a);
+  a += s0 * b0;
+  write_ssr_cfg(REG_STRIDES + 1, dm, s1 - a);
+  a += s1 * b1;
+  write_ssr_cfg(REG_STRIDES + 2, dm, s2 - a);
+  a += s2 * b2;
+  write_ssr_cfg(REG_STRIDES + 3, dm, s3 - a);
+  a += s3 * b3;
 }
 
 /**
@@ -212,7 +211,7 @@ inline void snrt_ssr_loop_4d(enum snrt_ssr_dm dm, size_t b0, size_t b1,
  * @param count The repetition count.
  */
 inline void snrt_ssr_repeat(enum snrt_ssr_dm dm, size_t count) {
-    write_ssr_cfg(REG_REPEAT, dm, count - 1);
+  write_ssr_cfg(REG_REPEAT, dm, count - 1);
 }
 
 /**
@@ -223,7 +222,7 @@ inline void snrt_ssr_repeat(enum snrt_ssr_dm dm, size_t count) {
  */
 inline void snrt_ssr_read(enum snrt_ssr_dm dm, enum snrt_ssr_dim dim,
                           volatile void *ptr) {
-    write_ssr_cfg(REG_RPTR + dim, dm, (uintptr_t)ptr);
+  write_ssr_cfg(REG_RPTR + dim, dm, (uintptr_t)ptr);
 }
 
 /**
@@ -234,5 +233,5 @@ inline void snrt_ssr_read(enum snrt_ssr_dm dm, enum snrt_ssr_dim dim,
  */
 inline void snrt_ssr_write(enum snrt_ssr_dm dm, enum snrt_ssr_dim dim,
                            volatile void *ptr) {
-    write_ssr_cfg(REG_WPTR + dim, dm, (uintptr_t)ptr);
+  write_ssr_cfg(REG_WPTR + dim, dm, (uintptr_t)ptr);
 }

@@ -84,20 +84,24 @@ endif()
 
 
 # -----------------------------------------------------------------------------
-# Specify Public Include Directories for snitch_runtime
+# Specify Interface for snitch_runtime
 # -----------------------------------------------------------------------------
-target_include_directories(snitch_runtime
-  PUBLIC
-    $<BUILD_INTERFACE:${GENERATED_CONFIG_DIR}>
+add_library(snitch_common_inc INTERFACE)
+target_include_directories(snitch_common_inc INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/core/inc>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/omp/inc>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/target/common/inc>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/target/${SNITCH_SIMULATOR}/inc>
-    $<BUILD_INTERFACE:${SNITCH_DEPS_DIR}>
-    $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/target/common/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/target/${SNITCH_SIMULATOR}/inc>
+    $<BUILD_INTERFACE:${SN_DEPS_DIR}>
+    $<BUILD_INTERFACE:${SN_DEPS_DIR}>/printf
+    $<BUILD_INTERFACE:${SN_GENERATED_DIR}>
+    $<INSTALL_INTERFACE:inc>  
 )
-
-
+    
+target_link_libraries(snitch_runtime
+    PUBLIC
+    snitch_common_inc
+)
 
 # -----------------------------------------------------------------------------
 # Set Link Options for snitch_runtime
@@ -119,10 +123,17 @@ target_link_options(snitch_runtime
   -mabi=${SNITCH_ABI}
 )
 
+
 # -----------------------------------------------------------------------------
 # Installation
 # -----------------------------------------------------------------------------
 include(CMakePackageConfigHelpers)
+
+# Install common include directories.
+install(TARGETS snitch_common_inc
+    EXPORT SnitchRuntimeTargets
+    INCLUDES DESTINATION inc
+)
 
 # Install the snitch_runtime target.
 install(TARGETS snitch_runtime
@@ -143,6 +154,9 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/target/${SNITCH_SIMULATOR}/inc
         DESTINATION include/snitch_runtime/${SNITCH_SIMULATOR})
 install(DIRECTORY ${SN_DEPS_DIR} 
         DESTINATION include/snitch_runtime/deps)
+install(DIRECTORY ${SN_GENERATED_DIR}
+        DESTINATION include/snitch_runtime/generated)
+
 
 # Export the targets for downstream use.
 install(EXPORT SnitchRuntimeTargets

@@ -12,24 +12,15 @@ file(GLOB RUNTIME_CORE_SOURCES
 add_library(snitch_runtime_core STATIC ${RUNTIME_CORE_SOURCES})
 
 target_compile_options(snitch_runtime_core PUBLIC
-    -march=${SNITCH_ISA}
-    -mabi=${SNITCH_ABI}
-    -mcpu=snitch
-    -mcmodel=small
-    -ffast-math
-    -fno-builtin-printf
-    -fno-common
-    -mno-relax
-    -Wno-atomic-alignment
-    -fopenmp
-    -ffunction-sections
-    -Wextra
-    -static
+    ${COMMON_COMPILE_OPTIONS}
 )
 
 target_include_directories(snitch_runtime_core
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
-    ${CMAKE_CURRENT_SOURCE_DIR}/../omp/inc
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../sw/deps/
+)
+
+target_link_libraries(snitch_runtime_core
+  PUBLIC
+  snitch_common_inc
 )

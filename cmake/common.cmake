@@ -8,6 +8,22 @@ set(SNITCH_ABI ilp32d CACHE STRING "ABI for the target Snitch flavor. Default is
 set(SNITCH_ISA rv32imafd_xdma1 CACHE STRING "ISA for the target Snitch flavor. Default is rv32imafd.")
 set(SNITCH_SIMULATOR rtl CACHE STRING "Simulator for the Snitch target. Default is rtl.")
 
+# Set common compiler flags
+set(COMMON_COMPILE_OPTIONS
+  -march=${SNITCH_ISA}
+  -mabi=${SNITCH_ABI}
+  -mcpu=snitch
+  -mcmodel=small
+  -ffast-math
+  -fno-builtin-printf
+  -fno-common
+  -mno-relax
+  -fopenmp
+  -ffunction-sections
+  -Wextra
+  -static
+)
+
 message(STATUS "[SNITCH_RUNTIME] SNITCH_ABI: ${SNITCH_ABI}")
 message(STATUS "[SNITCH_RUNTIME] SNITCH_ISA: ${SNITCH_ISA}")
 message(STATUS "[SNITCH_RUNTIME] SNITCH_SIMULATOR: ${SNITCH_SIMULATOR}")

@@ -10,20 +10,8 @@ file(GLOB RUNTIME_OMP_SOURCES
 
 add_library(snitch_runtime_omp STATIC ${RUNTIME_OMP_SOURCES})
 
-target_compile_options(snitch_runtime_core PUBLIC
-    -march=${SNITCH_ISA}
-    -mabi=${SNITCH_ABI}
-    -mcpu=snitch
-    -mcmodel=small
-    -ffast-math
-    -fno-builtin-printf
-    -fno-common
-    -mno-relax
-    -Wno-atomic-alignment
-    -fopenmp
-    -ffunction-sections
-    -Wextra
-    -static
+target_compile_options(snitch_runtime_omp PUBLIC
+    ${COMMON_COMPILE_OPTIONS}
 )
 
 target_include_directories(snitch_runtime_omp

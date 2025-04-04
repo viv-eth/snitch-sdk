@@ -1,0 +1,10 @@
+package:
+  name: snitch_sdk
+  authors:
+    - Viviane Potocnik <vivianep@iis.ee.ethz.ch>  # current maintainer
+
+dependencies:
+  register_interface: { git: https://github.com/pulp-platform/register_interface, version: 0.4.2  }
+  axi:                { git: https://github.com/pulp-platform/axi,                version: 0.39.6 }
+  common_cells:       { git: https://github.com/pulp-platform/common_cells,       version: 1.35.0 }
+  tech_cells_generic: { git: https://github.com/pulp-platform/tech_cells_generic, version: 0.2.13 }

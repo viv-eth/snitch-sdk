@@ -23,23 +23,22 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/common.cmake)
 # -----------------------------------------------------------------------------
 # Device Settings
 # -----------------------------------------------------------------------------
-set(SNITCH_DEVICE "snitch_cluster" CACHE STRING "Device name")
-set(SNITCH_DEPS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps" CACHE STRING "Directory for external dependencies")
-
-# -----------------------------------------------------------------------------
-# Include Helper CMake Modules
-# -----------------------------------------------------------------------------
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools/generate_hw_headers.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools/generate_peripherals.cmake)
-
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/tools/SnitchUtilities.cmake)
+set(SN_DEVICE "snitch_cluster")
+set(SN_CFG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/devices/${SN_DEVICE}/cfg")
+set(SN_HW_CFG "${SN_CFG_DIR}/default.hjson" CACHE STRING
+    "Path to the hardware configuration file. Use fdiv.hjson etc. to override the default.")
+set(SN_TEMPLATE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/devices/${SN_DEVICE}/templates")
+set(SN_DEPS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps" CACHE STRING "Directory for external dependencies")
+set(SN_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated" CACHE PATH "Directory for generated headers")
+file(MAKE_DIRECTORY "${SN_GENERATED_DIR}")
 
 # -----------------------------------------------------------------------------
 # Generate Hardware Headers
 # -----------------------------------------------------------------------------
-set(SNITCH_CLUSTER_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/scripts/snitch_cluster_cfg.h.tpl")
-set(SNITCH_ADDRMAP_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/scripts/snitch_cluster_addrmap.h.tpl")
-generate_hw_header(${SNITCH_CLUSTER_HEADER})
-generate_hw_header(${SNITCH_ADDRMAP_HEADER})
+generate_all_headers()
+
+# add_custom_target(generate_hw_headers ALL DEPENDS ${GENERATED_HEADERS})
 
 # -----------------------------------------------------------------------------
 # Include Directories
@@ -62,6 +61,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(core)
 add_subdirectory(omp)
+# VIVIANEP: Both the core and omp libs depend on the generated headers
+add_dependencies(snitch_runtime_core generate_all_headers)
+add_dependencies(snitch_runtime_omp generate_all_headers)
 
 if (ENABLE_SARIS)
   message(STATUS "[SNITCH_RUNTIME] Building SARIS runtime")
@@ -139,7 +141,7 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/target/common/inc
         DESTINATION include/snitch_runtime/common)
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/target/${SNITCH_SIMULATOR}/inc 
         DESTINATION include/snitch_runtime/${SNITCH_SIMULATOR})
-install(DIRECTORY ${SNITCH_DEPS_DIR} 
+install(DIRECTORY ${SN_DEPS_DIR} 
         DESTINATION include/snitch_runtime/deps)
 
 # Export the targets for downstream use.

@@ -54,6 +54,8 @@ function(generate_peripheral_header)
   set(SN_PERIPH_HEADER "${SN_GENERATED_DIR}/snitch_cluster_peripheral.h")
 
   # Locate Bender if not already defined.
+  # VIVIANEP: We have to execute bender here, since the regtool.py uses bender patches
+  # TODO: Change this approach in the `register_interface` repo to avoid bender
   if(NOT DEFINED BENDER)
     find_program(BENDER_EXECUTABLE NAMES bender)
     if(NOT BENDER_EXECUTABLE)

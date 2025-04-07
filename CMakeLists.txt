@@ -33,6 +33,9 @@ set(SN_DEPS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps" CACHE STRING "Directory for e
 set(SN_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated" CACHE PATH "Directory for generated headers")
 file(MAKE_DIRECTORY "${SN_GENERATED_DIR}")
 
+message(STATUS "[SNITCH-SDK] Building SDK for device: ${SN_DEVICE}")
+message(STATUS "[SNITCH-SDK] Using configuration file: ${SN_HW_CFG}")
+message(STATUS "[SNITCH-SDK] Generated files will be stored under: ${SN_GENERATED_DIR}")
 # -----------------------------------------------------------------------------
 # Generate Hardware Headers
 # -----------------------------------------------------------------------------
@@ -66,7 +69,7 @@ add_dependencies(snitch_runtime_core generate_all_headers)
 add_dependencies(snitch_runtime_omp generate_all_headers)
 
 if (ENABLE_SARIS)
-  message(STATUS "[SNITCH_RUNTIME] Building SARIS runtime")
+  message(STATUS "[SNITCH-SDK] Building SARIS runtime")
   add_subdirectory(saris)
 endif()
 
@@ -185,5 +188,3 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/SnitchRuntimeConfigVersion.cmake
     DESTINATION lib/cmake/SnitchRuntime
 )
-
-

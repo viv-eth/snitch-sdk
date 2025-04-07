@@ -26,7 +26,6 @@ function(generate_hw_headers)
   endif()
 
   file(GLOB TEMPLATE_FILES CONFIGURE_DEPENDS "${SN_TEMPLATE_DIR}/*.tpl")
-  message(STATUS "[DEBUG] Found template files: ${TEMPLATE_FILES}")
 
   set(GENERATED_HEADERS "")
   foreach(template ${TEMPLATE_FILES})

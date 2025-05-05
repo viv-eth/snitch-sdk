@@ -23,7 +23,7 @@ To build the SDK and all tests contained within it, run:
 .. code-block:: bash
 
     mkdir build && cd build
-    cmake -DSNITCH_DEVICE=<device> ..
+    cmake -DCMAKE_BUILD_TYPE=Release -DSNITCH_DEVICE=<device> ..
     cmake --build . -j
 
 Replace ``<device>`` with one of the supported device flavors (e.g., ``snitch_cluster``). The resulting binaries will be stored in ``build/bin`` and can be used to run tests or deploy applications on the Snitch cluster.
@@ -33,8 +33,10 @@ If you did not globally install the toolchain, you need to specify the ``TOOLCHA
 .. code-block:: bash
 
     mkdir build && cd build
-    cmake -DSNITCH_DEVICE=<device> -DTOOLCHAIN_DIR=<path-to-toolchain> ..
+    cmake -DCMAKE_BUILD_TYPE=Release -DSNITCH_DEVICE=<device> -DTOOLCHAIN_DIR=<path-to-toolchain> ..
     cmake --build . -j
+
+.. note:: The ``-DCMAKE_BUILD_TYPE=Release`` flag is used for aggressive optimizations. 
 
 IIS Workstations
 ^^^^^^^^^^^^^^^^
@@ -45,7 +47,7 @@ On IIS systems, users can leverage the pre-installed LLVM compiler by activating
 
     riscv <SHELL_TYPE> # Setup the default riscv environment (modifies PATH and LD_LIBRARY_PATH)
     mkdir build && cd build
-    cmake -DSNITCH_DEVICE=<device> -DTOOLCHAIN_DIR=/usr/pack/riscv-1.0-kgf/pulp-llvm-0.12.0 ..
+    cmake -DCMAKE_BUILD_TYPE=Release -DSNITCH_DEVICE=<device> -DTOOLCHAIN_DIR=/usr/pack/riscv-1.0-kgf/pulp-llvm-0.12.0 ..
     cmake --build . -j
 
 Targets

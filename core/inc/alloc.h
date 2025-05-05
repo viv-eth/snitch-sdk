@@ -95,7 +95,7 @@ inline void snrt_alloc_init() {
 }
 
 // TODO colluca: optimize by using DMA
-inline void *snrt_memset(void *ptr, int value, size_t num) {
+static inline void *snrt_memset(void *ptr, int value, size_t num) {
   for (uint32_t i = 0; i < num; ++i)
     *((uint8_t *)ptr + i) = (unsigned char)value;
   return ptr;

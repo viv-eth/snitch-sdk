@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
+#include "start.h"
+
 #ifdef SNRT_INIT_CLS
 extern uint32_t snrt_cls_base_addr();
 #endif
@@ -92,11 +94,23 @@ static inline void snrt_init_libs() {
 #endif
 
 #ifdef SNRT_CRT0_EXIT
-extern void snrt_exit_default(int exit_code);
+__attribute__((noinline)) void snrt_exit_default(int exit_code) {
+  exit_code = snrt_global_all_to_all_reduction(exit_code);
+#ifdef OPENOCD_SEMIHOSTING
+  if (snrt_global_core_idx() == 0)
+    __ocd_semihost_exit(exit_code);
+#else
+  if (snrt_global_core_idx() == 0)
+    *(snrt_exit_code_destination()) = (exit_code << 1) | 1;
+#endif
+}
+
 #ifndef SNRT_CRT0_ALTERNATE_EXIT
-extern void snrt_exit(int exit_code);
+__attribute__((noinline)) void snrt_exit(int exit_code) {
+  snrt_exit_default(exit_code);
+}
 #endif
-#endif
+#endif /* SNRT_CRT0_EXIT */
 
 void snrt_main() {
   int exit_code = 0;

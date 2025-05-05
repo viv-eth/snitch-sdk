@@ -29,14 +29,14 @@ inline void snrt_int_cluster_clr(uint32_t mask) {
  *         `snrt_int_wait_mcip_clr` if you need to block until the interrupt is
  *         cleared.
  */
-inline void snrt_int_clr_mcip_unsafe() {
+static inline void snrt_int_clr_mcip_unsafe() {
   snrt_int_cluster_clr(1 << snrt_cluster_core_idx());
 }
 
 /**
  * @brief Wait for MCIP interrupt to be cleared
  */
-inline void snrt_int_wait_mcip_clr() {
+static inline void snrt_int_wait_mcip_clr() {
   while (read_csr(mip) & MIP_MCIP)
     ;
 }
@@ -44,7 +44,7 @@ inline void snrt_int_wait_mcip_clr() {
 /**
  * @brief Clear MCIP interrupt and wait for the write to have effect
  */
-inline void snrt_int_clr_mcip() {
+static inline void snrt_int_clr_mcip() {
   snrt_int_clr_mcip_unsafe();
   snrt_int_wait_mcip_clr();
 }

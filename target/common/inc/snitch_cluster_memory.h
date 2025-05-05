@@ -26,7 +26,7 @@
 // snRuntime interface functions
 //===============================================================
 
-inline uint32_t cluster_base_offset() {
+static inline uint32_t cluster_base_offset() {
   return snrt_cluster_idx() * SNRT_CLUSTER_OFFSET;
 }
 
@@ -38,15 +38,15 @@ inline uint32_t snrt_l1_end_addr() {
   return CLUSTER_PERIPH_BASE_ADDR + cluster_base_offset();
 }
 
-inline volatile uint32_t *snrt_cluster_clint_set_ptr() {
+static inline volatile uint32_t *snrt_cluster_clint_set_ptr() {
   return (uint32_t *)(CLUSTER_CLINT_SET_ADDR + cluster_base_offset());
 }
 
-inline volatile uint32_t *snrt_cluster_clint_clr_ptr() {
+static inline volatile uint32_t *snrt_cluster_clint_clr_ptr() {
   return (uint32_t *)(CLUSTER_CLINT_CLR_ADDR + cluster_base_offset());
 }
 
-inline uint32_t snrt_cluster_perf_counters_addr() {
+static inline uint32_t snrt_cluster_perf_counters_addr() {
   return CLUSTER_PERF_COUNTER_ADDR + cluster_base_offset();
 }
 

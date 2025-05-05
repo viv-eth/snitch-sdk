@@ -2,25 +2,31 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
+#ifndef SNITCH_START_H
+#define SNITCH_START_H
+
+#include "snrt.h"
+
 #ifdef OPENOCD_SEMIHOSTING
 #include "openocd.h"
 #endif
 
 #ifdef SNRT_CRT0_EXIT
-inline void snrt_exit_default(int exit_code) {
-  exit_code = snrt_global_all_to_all_reduction(exit_code);
-#ifdef OPENOCD_SEMIHOSTING
-  if (snrt_global_core_idx() == 0)
-    __ocd_semihost_exit(exit_code);
-#else
-  if (snrt_global_core_idx() == 0)
-    *(snrt_exit_code_destination()) = (exit_code << 1) | 1;
-#endif
-}
+/*
+ * The exit routines are declared here but will be defined exactly once
+ * in start.c. This avoids duplicate definitions when the header is
+ * included in multiple translation units.
+ *
+ * The noinline attribute is applied in the source file to ensure that
+ * these functions are not inlined away. (If desired you could also mark
+ * them here with __attribute__((noinline)) in the declaration; however,
+ * it is typically better to do that on the definition.)
+ */
+void snrt_exit_default(int exit_code);
 #ifndef SNRT_CRT0_ALTERNATE_EXIT
-inline void snrt_exit(int exit_code) { snrt_exit_default(exit_code); }
+void snrt_exit(int exit_code);
 #endif
-#endif
+#endif /* SNRT_CRT0_EXIT */
 
 #ifdef SNRT_INIT_CLS
 inline uint32_t snrt_cls_base_addr() {
@@ -34,3 +40,4 @@ inline uint32_t snrt_cls_base_addr() {
   return l1_end_addr - cdata_size - cbss_size;
 }
 #endif
+#endif /* SNITCH_START_H */

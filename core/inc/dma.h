@@ -159,10 +159,9 @@ inline snrt_dma_txid_t snrt_dma_start_2d(void *dst, const void *src,
  * @param channel The index of the channel.
  * @return The DMA transfer ID.
  */
-inline snrt_dma_txid_t snrt_dma_start_1d_channel_wideptr(uint64_t dst,
-                                                         uint64_t src,
-                                                         size_t size,
-                                                         uint32_t channel) {
+static inline snrt_dma_txid_t
+snrt_dma_start_1d_channel_wideptr(uint64_t dst, uint64_t src, size_t size,
+                                  uint32_t channel) {
   register uint32_t reg_dst_low asm("a0") = dst >> 0;   // 10
   register uint32_t reg_dst_high asm("a1") = dst >> 32; // 11
   register uint32_t reg_src_low asm("a2") = src >> 0;   // 12
@@ -200,9 +199,10 @@ inline snrt_dma_txid_t snrt_dma_start_1d_channel_wideptr(uint64_t dst,
  * @param channel The index of the channel.
  * @return The DMA transfer ID.
  */
-inline snrt_dma_txid_t snrt_dma_start_1d_channel(void *dst, const void *src,
-                                                 size_t size,
-                                                 uint32_t channel) {
+static inline snrt_dma_txid_t snrt_dma_start_1d_channel(void *dst,
+                                                        const void *src,
+                                                        size_t size,
+                                                        uint32_t channel) {
   return snrt_dma_start_1d_channel_wideptr((size_t)dst, (size_t)src, size,
                                            channel);
 }
@@ -221,7 +221,7 @@ inline snrt_dma_txid_t snrt_dma_start_1d_channel(void *dst, const void *src,
  * @param channel The index of the channel.
  * @return The DMA transfer ID.
  */
-inline snrt_dma_txid_t
+static inline snrt_dma_txid_t
 snrt_dma_start_2d_channel_wideptr(uint64_t dst, uint64_t src, size_t size,
                                   size_t dst_stride, size_t src_stride,
                                   size_t repeat, uint32_t channel) {
@@ -280,11 +280,10 @@ snrt_dma_start_2d_channel_wideptr(uint64_t dst, uint64_t src, size_t size,
  * @param channel The index of the channel.
  * @return The DMA transfer ID.
  */
-inline snrt_dma_txid_t snrt_dma_start_2d_channel(void *dst, const void *src,
-                                                 size_t size, size_t dst_stride,
-                                                 size_t src_stride,
-                                                 size_t repeat,
-                                                 uint32_t channel) {
+static inline snrt_dma_txid_t
+snrt_dma_start_2d_channel(void *dst, const void *src, size_t size,
+                          size_t dst_stride, size_t src_stride, size_t repeat,
+                          uint32_t channel) {
   return snrt_dma_start_2d_channel_wideptr(
       (size_t)dst, (size_t)src, size, dst_stride, src_stride, repeat, channel);
 }
@@ -335,7 +334,7 @@ inline void snrt_dma_wait_all() {
  * @brief Block until a specific DMA channel is idle.
  * @param channel The index of the channel.
  */
-inline void snrt_dma_wait_all_channel(uint32_t channel) {
+static inline void snrt_dma_wait_all_channel(uint32_t channel) {
   register uint32_t tmp;
   // dmstati t0, 2  # 2=status.busy
   register uint32_t cfg asm("t1") = channel << 2 | 2;
@@ -351,7 +350,7 @@ inline void snrt_dma_wait_all_channel(uint32_t channel) {
  * @brief Block until the first @p num_channels channels are idle.
  * @param num_channels The number of channels to wait on.
  */
-inline void snrt_dma_wait_all_channels(uint32_t num_channels) {
+static inline void snrt_dma_wait_all_channels(uint32_t num_channels) {
   register uint32_t tmp;
   // dmstati t0, 2  # 2=status.busy
   for (uint32_t c = 0; c < num_channels; c++) {

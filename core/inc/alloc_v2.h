@@ -19,7 +19,9 @@ extern __thread snrt_allocator_t l1_allocator_v2;
  *
  * @return Pointer to the L1 allocator.
  */
-inline snrt_allocator_t *snrt_l1_allocator_v2() { return &l1_allocator_v2; }
+static inline snrt_allocator_t *snrt_l1_allocator_v2() {
+  return &l1_allocator_v2;
+}
 
 /**
  * @brief Get the next pointer of the L1 allocator.
@@ -43,7 +45,7 @@ inline void snrt_l1_update_next_v2(void *next) {
  * @brief Check if the allocation exceeds the allocator bounds and raise an
  *        exception if it does.
  */
-inline void snrt_l1_alloc_check_bounds() {
+static inline void snrt_l1_alloc_check_bounds() {
   if (snrt_l1_allocator_v2()->next > snrt_l1_allocator_v2()->end)
     asm volatile("ecall \n");
 }

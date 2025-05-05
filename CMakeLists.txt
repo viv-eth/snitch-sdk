@@ -13,10 +13,12 @@
 # -----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.13)
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_COMPILER_WORKS 1)  # Skip compiler tests for bare-metal
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_LIST_DIR}/cmake/toolchains/toolchain_llvm.cmake)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/../install" CACHE PATH "Installation directory for snitch_runtime")
 project(snitch_runtime VERSION 1.0 LANGUAGES C ASM)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/common.cmake)
 
@@ -64,6 +66,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(core)
 add_subdirectory(omp)
+add_subdirectory(target/${SNITCH_SIMULATOR})
 # VIVIANEP: Both the core and omp libs depend on the generated headers
 add_dependencies(snitch_runtime_core generate_all_headers)
 add_dependencies(snitch_runtime_omp generate_all_headers)
@@ -80,6 +83,7 @@ endif()
 add_library(snitch_runtime STATIC
     $<TARGET_OBJECTS:snitch_runtime_core>
     $<TARGET_OBJECTS:snitch_runtime_omp>
+    $<TARGET_OBJECTS:snitch_runtime_target>
 )
 if(ENABLE_SARIS)
     target_link_libraries(snitch_runtime PUBLIC snitch_runtime_saris)
@@ -96,10 +100,28 @@ target_include_directories(snitch_common_inc INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/target/common/inc>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/target/${SNITCH_SIMULATOR}/inc>
     $<BUILD_INTERFACE:${SN_DEPS_DIR}>
-    $<BUILD_INTERFACE:${SN_DEPS_DIR}>/printf
+    # $<BUILD_INTERFACE:${SN_DEPS_DIR}/printf>
     $<BUILD_INTERFACE:${SN_GENERATED_DIR}>
-    $<INSTALL_INTERFACE:inc>  
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/snitch_runtime/core/inc>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/snitch_runtime/omp/inc>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/snitch_runtime/common/inc>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/snitch_runtime/${SNITCH_SIMULATOR}/inc>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/snitch_runtime/deps>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/snitch_runtime/deps/printf>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/snitch_runtime/generated>
+    $<INSTALL_INTERFACE:snitch_runtime>  
 )
+
+message(STATUS "[SNITCH-SDK] snitch_runtime include directories:")
+message(STATUS "  ${CMAKE_CURRENT_SOURCE_DIR}/core/inc")
+message(STATUS "  ${CMAKE_CURRENT_SOURCE_DIR}/omp/inc")
+message(STATUS "  ${CMAKE_CURRENT_SOURCE_DIR}/target/common/inc")
+message(STATUS "  ${CMAKE_CURRENT_SOURCE_DIR}/target/${SNITCH_SIMULATOR}/inc")
+message(STATUS "  ${SN_DEPS_DIR}")
+message(STATUS "  ${SN_DEPS_DIR}/printf")
+message(STATUS "  ${SN_GENERATED_DIR}")
+
+message(STATUS "[SNITCH-SDK] Install interface: snitch_runtime")
     
 target_link_libraries(snitch_runtime
     PUBLIC
@@ -112,12 +134,13 @@ target_link_libraries(snitch_runtime
 # TODO: Check which of these link options are actually needed
 target_link_options(snitch_runtime
   PUBLIC
+  -T${CMAKE_CURRENT_LIST_DIR}/linker/base.ld
   -L${CMAKE_CURRENT_LIST_DIR}/linker
   -mcpu=snitch
   -static
   -mcmodel=small
-  -Wl, -dead_strip
   -Wl, -mno-relax
+  -Wl,--no-gc-sections
   -nostartfiles
   -ffast-math
   -fno-common
@@ -135,7 +158,7 @@ include(CMakePackageConfigHelpers)
 # Install common include directories.
 install(TARGETS snitch_common_inc
     EXPORT SnitchRuntimeTargets
-    INCLUDES DESTINATION inc
+    INCLUDES DESTINATION snitch_runtime
 )
 
 # Install the snitch_runtime target.
@@ -148,17 +171,41 @@ install(TARGETS snitch_runtime
 
 # Install public headers.
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/core/inc 
-        DESTINATION include/snitch_runtime/core)
+        DESTINATION snitch_runtime/core)
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/omp/inc 
-        DESTINATION include/snitch_runtime/omp)
+        DESTINATION snitch_runtime/omp)
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/target/common/inc 
-        DESTINATION include/snitch_runtime/common)
+        DESTINATION snitch_runtime/common)
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/target/${SNITCH_SIMULATOR}/inc 
-        DESTINATION include/snitch_runtime/${SNITCH_SIMULATOR})
+        DESTINATION snitch_runtime/${SNITCH_SIMULATOR})
 install(DIRECTORY ${SN_DEPS_DIR} 
-        DESTINATION include/snitch_runtime/deps)
+        DESTINATION snitch_runtime)
 install(DIRECTORY ${SN_GENERATED_DIR}
-        DESTINATION include/snitch_runtime/generated)
+        DESTINATION snitch_runtime)
+
+message(STATUS "[SNITCH-SDK] Installing core/inc:")
+message(STATUS "  Source:      ${CMAKE_CURRENT_SOURCE_DIR}/core/inc")
+message(STATUS "  Destination: ${CMAKE_INSTALL_PREFIX}/snitch_runtime/core/inc")
+
+message(STATUS "[SNITCH-SDK] Installing omp/inc:")
+message(STATUS "  Source:      ${CMAKE_CURRENT_SOURCE_DIR}/omp/inc")
+message(STATUS "  Destination: ${CMAKE_INSTALL_PREFIX}/snitch_runtime/omp/inc")
+
+message(STATUS "[SNITCH-SDK] Installing common/inc:")
+message(STATUS "  Source:      ${CMAKE_CURRENT_LIST_DIR}/target/common/inc")
+message(STATUS "  Destination: ${CMAKE_INSTALL_PREFIX}/snitch_runtime/common/inc")
+
+message(STATUS "[SNITCH-SDK] Installing ${SNITCH_SIMULATOR}/inc:")
+message(STATUS "  Source:      ${CMAKE_CURRENT_LIST_DIR}/target/${SNITCH_SIMULATOR}/inc")
+message(STATUS "  Destination: ${CMAKE_INSTALL_PREFIX}/snitch_runtime/${SNITCH_SIMULATOR}/inc")
+
+message(STATUS "[SNITCH-SDK] Installing deps:")
+message(STATUS "  Source:      ${SN_DEPS_DIR}")
+message(STATUS "  Destination: ${CMAKE_INSTALL_PREFIX}/snitch_runtime/deps")
+
+message(STATUS "[SNITCH-SDK] Installing generated headers:")
+message(STATUS "  Source:      ${SN_GENERATED_DIR}")
+message(STATUS "  Destination: ${CMAKE_INSTALL_PREFIX}/snitch_runtime/generated")
 
 
 # Export the targets for downstream use.

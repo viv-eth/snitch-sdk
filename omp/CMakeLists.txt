@@ -10,7 +10,8 @@ file(GLOB RUNTIME_OMP_SOURCES
 
 add_library(snitch_runtime_omp STATIC ${RUNTIME_OMP_SOURCES})
 
-target_compile_options(snitch_runtime_omp PUBLIC
+target_compile_options(snitch_runtime_omp 
+  PUBLIC
     ${COMMON_COMPILE_OPTIONS}
 )
 

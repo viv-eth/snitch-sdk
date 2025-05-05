@@ -6,12 +6,12 @@
 
 file(GLOB RUNTIME_CORE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.S"
 )
 
 add_library(snitch_runtime_core STATIC ${RUNTIME_CORE_SOURCES})
 
-target_compile_options(snitch_runtime_core PUBLIC
+target_compile_options(snitch_runtime_core 
+  PUBLIC
     ${COMMON_COMPILE_OPTIONS}
 )
 

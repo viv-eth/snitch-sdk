@@ -162,9 +162,8 @@ enum sched_type : kmp_int32 {
 #define SCHEDULE_WITHOUT_MODIFIERS(s) \
     (enum sched_type)(                \
         (s) & ~(kmp_sch_modifier_nonmonotonic | kmp_sch_modifier_monotonic))
-#define SCHEDULE_HAS_MONOTONIC(s) (((s) & kmp_sch_modifier_monotonic) != 0)
-#define SCHEDULE_HAS_NONMONOTONIC(s) \
-    (((s) & kmp_sch_modifier_nonmonotonic) != 0)
+#define SCHEDULE_HAS_MONOTONIC(s) (((s)&kmp_sch_modifier_monotonic) != 0)
+#define SCHEDULE_HAS_NONMONOTONIC(s) (((s)&kmp_sch_modifier_nonmonotonic) != 0)
 #define SCHEDULE_HAS_NO_MODIFIERS(s) \
     (((s) & (kmp_sch_modifier_nonmonotonic | kmp_sch_modifier_monotonic)) == 0)
 #define SCHEDULE_GET_MODIFIERS(s) \

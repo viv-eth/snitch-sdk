@@ -12,13 +12,13 @@ inline uint32_t __attribute__((const)) snrt_platform_cluster_num(void) {
     return SNRT_CLUSTER_NUM;
 }
 
-inline uint32_t __attribute__((const)) snrt_platform_cluster_core_num(
-    uint32_t cluster_idx) {
+inline uint32_t __attribute__((const))
+snrt_platform_cluster_core_num(uint32_t cluster_idx) {
     (void)cluster_idx;
     return SNRT_CLUSTER_CORE_NUM;
 }
 
-inline uint32_t __attribute__((const)) snrt_platform_cluster_base_hartid(
-    uint32_t cluster_idx) {
+inline uint32_t __attribute__((const))
+snrt_platform_cluster_base_hartid(uint32_t cluster_idx) {
     return SNRT_BASE_HARTID + cluster_idx * SNRT_CLUSTER_CORE_NUM;
 }

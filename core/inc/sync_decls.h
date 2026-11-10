@@ -30,7 +30,7 @@ typedef snrt_comm_info_t *snrt_comm_t;
 
 // (base, mask) mask covering the first size clusters, size need not be 2^n
 #define SNRT_COMM_MASK(size) \
-    ((size) > 1 ? UINT32_MAX >> __builtin_clz((uint32_t)(size) - 1) : 0)
+    ((size) > 1 ? UINT32_MAX >> __builtin_clz((uint32_t)(size)-1) : 0)
 
 // NOTE: these numeric values must match FlooNoC's encoding
 typedef enum {

@@ -17,9 +17,7 @@
 #ifdef OPENMP_PROFILE
 #define OMP_PROF(X) \
     do {            \
-        {           \
-            X;      \
-        }           \
+        { X; }      \
     } while (0)
 #else
 #define OMP_PROF(X) \

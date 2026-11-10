@@ -326,7 +326,8 @@ inline void snrt_partial_barrier(snrt_barrier_t *barr, uint32_t n) {
         __atomic_add_fetch(&barr->iteration, 1, __ATOMIC_RELAXED);
     } else {
         // Some threads have not reached the barrier --> Let's wait
-        while (prev_it == barr->iteration);
+        while (prev_it == barr->iteration)
+            ;
     }
 }
 

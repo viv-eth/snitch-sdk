@@ -35,7 +35,7 @@ inline void snrt_ssr_flt(double lval, double rval) {
     // flt.d.copift ft2, lval, rval
     asm volatile(".word %[insn]\n"
                  :
-                 : [insn] "i"(FLT_D_SSR(2, 10, 11)), "f"(reg_lval),
+                 : [ insn ] "i"(FLT_D_SSR(2, 10, 11)), "f"(reg_lval),
                    "f"(reg_rval));
 }
 
@@ -49,7 +49,7 @@ inline double snrt_ssr_fcvt() {
     // fcvt.d.wu fa0, ft0
     asm volatile(".word %[insn]\n"
                  : "=f"(reg_result)
-                 : [insn] "i"(FCVT_D_WU_SSR(10, 0)));
+                 : [ insn ] "i"(FCVT_D_WU_SSR(10, 0)));
 
     return reg_result;
 }

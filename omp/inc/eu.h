@@ -64,7 +64,8 @@ extern volatile eu_t *volatile eu_p_global;
 
 static inline void wait_worker_wfi(void) {
     uint32_t scratch = eu_p->workers_in_loop;
-    while (__atomic_load_n(&eu_p->workers_wfi, __ATOMIC_RELAXED) != scratch);
+    while (__atomic_load_n(&eu_p->workers_wfi, __ATOMIC_RELAXED) != scratch)
+        ;
 }
 
 /**
@@ -172,7 +173,8 @@ inline void eu_init(void) {
         // store copy of eu_p on shared memory
         eu_p_global = eu_p;
     } else {
-        while (!eu_p_global);
+        while (!eu_p_global)
+            ;
         eu_p = eu_p_global;
     }
 }
@@ -288,7 +290,8 @@ inline void eu_run_empty(uint32_t core_idx) {
     if (scratch > 1) {
         scratch = eu_get_workers_in_loop();
         while (__atomic_load_n(&eu_p->e.fini_count, __ATOMIC_RELAXED) !=
-               scratch);
+               scratch)
+            ;
     }
 
     // stop workers from re-executing the task

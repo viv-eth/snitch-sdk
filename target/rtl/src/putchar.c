@@ -58,7 +58,8 @@ void _putchar(char character) {
 
         snrt_mutex_acquire(snrt_mutex());
         tohost = (uintptr_t)buf->hdr.syscall_mem;
-        while (fromhost == 0);
+        while (fromhost == 0)
+            ;
         fromhost = 0;
         snrt_mutex_release(snrt_mutex());
 

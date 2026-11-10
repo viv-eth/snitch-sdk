@@ -170,8 +170,8 @@ inline int __attribute__((const)) snrt_is_dm_core() {
 }
 
 // Translates this cluster's core_mask to cluster_idx; DM cores stay last
-inline uint32_t __attribute__((const)) snrt_remote_core_mask(
-    uint32_t core_mask, uint32_t cluster_idx) {
+inline uint32_t __attribute__((const))
+snrt_remote_core_mask(uint32_t core_mask, uint32_t cluster_idx) {
     uint32_t num = snrt_cluster_compute_core_num();
     uint32_t remote_num = snrt_platform_cluster_core_num(cluster_idx) -
                           snrt_cluster_dm_core_num();

@@ -14,6 +14,7 @@ peakrdl-cheader==1.0.0
 peakrdl-rawheader==0.1.1
 
 yapf==0.33.0
+clang-format==10.0.1
 
 # Requirements for documentation
 sphinx>=7.0.0

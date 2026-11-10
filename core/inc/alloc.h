@@ -14,8 +14,8 @@
 #define MIN_CHUNK_SIZE SNRT_MIN_CHUNK_SIZE
 
 // Power-of-two alignment macros kept for C users of the old API (chimera-sdk)
-#define ALIGN_UP(addr, size) (((addr) + (size) - 1) & ~((size) - 1))
-#define ALIGN_DOWN(addr, size) ((addr) & ~((size) - 1))
+#define ALIGN_UP(addr, size) (((addr) + (size)-1) & ~((size)-1))
+#define ALIGN_DOWN(addr, size) ((addr) & ~((size)-1))
 
 /**
  * @brief Align to next multiple of size from a given base.
@@ -73,7 +73,7 @@ inline void *snrt_align_up_hyperbank_ptr(void *addr) {
     return (void *)snrt_align_up_hyperbank_uintptr((uintptr_t)addr);
 }
 
-#define snrt_align_up_hyperbank(addr)        \
+#define snrt_align_up_hyperbank(addr) \
     _Generic((addr),                         \
         void *: snrt_align_up_hyperbank_ptr, \
         default: snrt_align_up_hyperbank_uintptr)(addr)

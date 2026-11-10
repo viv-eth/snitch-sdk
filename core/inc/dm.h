@@ -137,7 +137,8 @@ static inline void wfi_dm(uint32_t cluster_core_idx) {
 }
 static inline void wake_dm(void) {
     // wait for DM to sleep before sending wakeup
-    while (!__atomic_load_n(&dm_p->dm_wfi, __ATOMIC_RELAXED));
+    while (!__atomic_load_n(&dm_p->dm_wfi, __ATOMIC_RELAXED))
+        ;
     snrt_int_cluster_set(1 << snrt_cluster_compute_core_num());
 }
 #endif  // #ifdef DM_USE_GLOBAL_CLINT
@@ -160,7 +161,8 @@ inline void dm_init(void) {
         snrt_dma_memset((void *)dm_p, 0, sizeof(dm_t));
         dm_p_global = dm_p;
     } else {
-        while (!dm_p_global);
+        while (!dm_p_global)
+            ;
         dm_p = dm_p_global;
     }
 }
@@ -181,7 +183,8 @@ inline void dm_main(void) {
         /// New transaction to issue?
         if (dm_p->queue_fill) {
             // wait until DMA is ready
-            while (snrt_dma_would_block());
+            while (snrt_dma_would_block())
+                ;
 
             t = &dm_p->queue[dm_p->queue_back];
 
@@ -351,7 +354,8 @@ inline void dm_wait(void) {
     do {
         s = __atomic_load_n(&dm_p->queue_fill, __ATOMIC_RELAXED);
     } while (s != 0);
-    while (dm_p->stat_q);
+    while (dm_p->stat_q)
+        ;
 
     // then, issue the STAT_WAIT_IDLE request so the DM core polls for the DMA
     // to be idle
@@ -362,7 +366,8 @@ inline void dm_wait(void) {
     // signal data mover
     wake_dm();
     // whenever stat_pvalid is non-zero, the DMA has completed all transfers
-    while (!dm_p->stat_pvalid);
+    while (!dm_p->stat_pvalid)
+        ;
     _dm_mtx_release();
 }
 
@@ -375,7 +380,8 @@ inline void dm_wait_ready(void) {
     dm_p->stat_pvalid = 0;
     dm_p->stat_q = STAT_READY;
     wake_dm();
-    while (!dm_p->stat_pvalid);
+    while (!dm_p->stat_pvalid)
+        ;
     _dm_mtx_release();
 }
 

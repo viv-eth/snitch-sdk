@@ -47,9 +47,10 @@ SNRT_OVERLOADABLE inline uint32_t snrt_dma_start_1d(uint64_t dst, uint64_t src,
         "dmsrc %[src_lo], %[src_hi] \n"
         "dmdst %[dst_lo], %[dst_hi] \n"
         "dmcpy %[txid], %[size], %[cfg] \n"
-        : [txid] "=r"(txid)
-        : [src_lo] "r"(src_lo), [src_hi] "r"(src_hi), [dst_lo] "r"(dst_lo),
-          [dst_hi] "r"(dst_hi), [size] "r"(size), [cfg] "r"(cfg));
+        : [ txid ] "=r"(txid)
+        : [ src_lo ] "r"(src_lo), [ src_hi ] "r"(src_hi),
+          [ dst_lo ] "r"(dst_lo), [ dst_hi ] "r"(dst_hi), [ size ] "r"(size),
+          [ cfg ] "r"(cfg));
     return txid;
 #else
     memcpy((void *)dst, (const void *)src, size);
@@ -96,7 +97,7 @@ inline void snrt_dma_set_awuser(uint64_t field) {
     // dmuser user_low, user_high (encoded, LLVM 18 lacks the mnemonic)
     asm volatile(".insn r 0x2b, 0, 8, x0, %[user_low], %[user_high] \n"
                  :
-                 : [user_low] "r"(user_low), [user_high] "r"(user_high));
+                 : [ user_low ] "r"(user_low), [ user_high ] "r"(user_high));
 #endif
 }
 
@@ -305,11 +306,11 @@ SNRT_OVERLOADABLE inline snrt_dma_txid_t snrt_dma_start_2d(
         "dmstr %[src_stride], %[dst_stride] \n"
         "dmrep %[repeat] \n"
         "dmcpy %[txid], %[size], %[cfg] \n"
-        : [txid] "=r"(txid)
-        : [src_lo] "r"(src_lo), [src_hi] "r"(src_hi), [dst_lo] "r"(dst_lo),
-          [dst_hi] "r"(dst_hi), [dst_stride] "r"(dst_stride),
-          [src_stride] "r"(src_stride), [repeat] "r"(repeat), [size] "r"(size),
-          [cfg] "r"(cfg));
+        : [ txid ] "=r"(txid)
+        : [ src_lo ] "r"(src_lo), [ src_hi ] "r"(src_hi),
+          [ dst_lo ] "r"(dst_lo), [ dst_hi ] "r"(dst_hi),
+          [ dst_stride ] "r"(dst_stride), [ src_stride ] "r"(src_stride),
+          [ repeat ] "r"(repeat), [ size ] "r"(size), [ cfg ] "r"(cfg));
 
     return txid;
 #else
@@ -408,8 +409,8 @@ snrt_dma_busy(const uint32_t channel) {
 #ifdef SNRT_SUPPORTS_DMA
     uint32_t busy;
     asm volatile("dmstati %[busy], (%[channel] << 2) | 2 \n"
-                 : [busy] "=r"(busy)
-                 : [channel] "i"(channel)
+                 : [ busy ] "=r"(busy)
+                 : [ channel ] "i"(channel)
                  :);
     return busy;
 #else
@@ -436,8 +437,8 @@ snrt_dma_would_block(const uint32_t channel) {
 #ifdef SNRT_SUPPORTS_DMA
     uint32_t would_block;
     asm volatile("dmstati %[would_block], (%[channel] << 2) | 3 \n"
-                 : [would_block] "=r"(would_block)
-                 : [channel] "i"(channel)
+                 : [ would_block ] "=r"(would_block)
+                 : [ channel ] "i"(channel)
                  :);
     return would_block;
 #else
@@ -468,7 +469,7 @@ snrt_dma_wait(snrt_dma_txid_t txid, const uint32_t channel) {
         "dmstati t0, (%[channel] << 2) | 0 \n"
         "bltu t0, %[txid], 1b \n"
         :
-        : [txid] "r"(txid), [channel] "i"(channel)
+        : [ txid ] "r"(txid), [ channel ] "i"(channel)
         : "t0");
 #endif
 }
@@ -490,7 +491,8 @@ snrt_dma_wait(snrt_dma_txid_t txid) {
 SNRT_OVERLOADABLE static inline __attribute__((always_inline)) void
 snrt_dma_wait_all(const uint32_t channel) {
 #ifdef SNRT_SUPPORTS_DMA
-    while (snrt_dma_busy(channel));
+    while (snrt_dma_busy(channel))
+        ;
 #endif
 }
 
@@ -907,7 +909,7 @@ inline void snrt_dma_set_opcode_params(uint32_t opcode, uint32_t params) {
     // dmopc opcode, params (encoded, LLVM 18 lacks the mnemonic)
     asm volatile(".insn r 0x2b, 0, 10, x0, %[opcode], %[params] \n"
                  :
-                 : [opcode] "r"(opcode), [params] "r"(params)
+                 : [ opcode ] "r"(opcode), [ params ] "r"(params)
                  : "memory");
 }
 

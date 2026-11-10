@@ -127,14 +127,14 @@ inline void snrt_ssr_disable() {
  *             chaining.
  */
 inline void snrt_sc_enable(uint32_t mask) {
-    asm volatile("csrs 0x7C3, %[mask]\n" : : [mask] "r"(mask) :);
+    asm volatile("csrs 0x7C3, %[mask]\n" : : [ mask ] "r"(mask) :);
 }
 
 /**
  * @brief Disable scalar chaining.
  */
 inline void snrt_sc_disable(uint32_t mask) {
-    asm volatile("csrc 0x7C3, %[mask]\n" : : [mask] "r"(mask) :);
+    asm volatile("csrc 0x7C3, %[mask]\n" : : [ mask ] "r"(mask) :);
 }
 
 /**
@@ -148,8 +148,8 @@ static inline uint32_t read_ssr_cfg(const snrt_ssr_reg_t reg,
 #ifdef SNRT_SUPPORTS_SSR
     uint32_t value;
     asm volatile("scfgri %[value], %[dm] | %[reg]<<5\n"
-                 : [value] "=r"(value)
-                 : [dm] "i"(dm), [reg] "i"(reg));
+                 : [ value ] "=r"(value)
+                 : [ dm ] "i"(dm), [ reg ] "i"(reg));
     return value;
 #else
     (void)reg;
@@ -173,7 +173,7 @@ static inline void write_ssr_cfg(const snrt_ssr_reg_t reg,
                                  const snrt_ssr_dm_t dm, uint32_t value) {
 #ifdef SNRT_SUPPORTS_SSR
     asm volatile("scfgwi %[value], %[dm] | %[reg]<<5\n" ::[value] "r"(value),
-                 [dm] "i"(dm), [reg] "i"(reg));
+                 [ dm ] "i"(dm), [ reg ] "i"(reg));
 #else
     (void)reg;
     (void)dm;

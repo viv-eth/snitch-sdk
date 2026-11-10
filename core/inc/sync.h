@@ -454,13 +454,9 @@ inline void snrt_global_reduction_dma(double *dst_buffer, double *src_buffer,
                 }
             }
 
-            // Synchronize compute and DM cores for next tree level
+            // The next level may only overwrite dst_buffer once it is reduced
             snrt_fpu_fence();
-            // The next level's sender may only overwrite dst once it is reduced
-            if (level + 1 < num_levels)
-                snrt_global_barrier(comm);
-            else
-                snrt_cluster_hw_barrier();
+            snrt_global_barrier(comm);
         }
     }
 }

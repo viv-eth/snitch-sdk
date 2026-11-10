@@ -4,6 +4,15 @@
 #
 # Viviane Potocnik <vivianep@iis.ee.ethz.ch>
 
+# Requirements for the hardware header generation (clustergen and PeakRDL)
+json5==0.12.1
+jsonref==1.1.0
+jsonschema==4.25.1
+mako==1.3.10
+peakrdl==1.5.0
+peakrdl-cheader==1.0.0
+peakrdl-rawheader==0.1.1
+
 yapf==0.33.0
 
 # Requirements for documentation

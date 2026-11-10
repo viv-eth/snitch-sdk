@@ -1,6 +1,6 @@
-# Copyright 2020 ETH Zurich and University of Bologna.
-# Licensed under the Apache License, Version 2.0, see LICENSE for details.
-# SPDX-License-Identifier: Apache-2.0
+// Copyright 2020 ETH Zurich and University of Bologna.
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
 
 .section .init
 _start:
@@ -142,11 +142,6 @@ snrt.crt0.init_stack:
     # Initialize the stack pointer to the start of the stack
     sub       sp, a2, t0
 
-    # Calculate the end of the stack, could be used by later routines
-    # to calculate remaining TCDM space
-    sll       t1, a1, t2
-    sub       a2, a2, t1
-
     # Misalign stacks in the TCDM to reduce banking conflicts
     slli      t0, a0, 3  # this hart
     slli      t1, a1, 3  # all harts
@@ -157,12 +152,8 @@ snrt.crt0.init_stack:
 #ifdef SNRT_INIT_TLS
 snrt.crt0.init_tls:
     # Reserve space for thread-local storage at the top of the stack
-    la        t0, __tdata_end
-    la        t1, __tdata_start
-    sub       t0, t0, t1
-    sub       sp, sp, t0
     la        t0, __tbss_end
-    la        t1, __tbss_start
+    la        t1, __tdata_start
     sub       t0, t0, t1
     sub       sp, sp, t0
     andi      sp, sp, ~0x7 # align to 8B
@@ -315,5 +306,5 @@ __snrt_crt0_interrupt_handler:
 
 # HTIF sections
 .pushsection .htif,"aw",@progbits;
-.align 6; .global shared_data.device_to_host; shared_data.device_to_host: .dword 0;
-.align 6; .global shared_data.host_to_device; shared_data.host_to_device: .dword 0;
+.align 6; .global tohost; tohost: .dword 0;
+.align 6; .global fromhost; fromhost: .dword 0;

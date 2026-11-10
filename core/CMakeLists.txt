@@ -4,8 +4,12 @@
 #
 # Viviane Potocnik <vivianep@iis.ee.ethz.ch>
 
-file(GLOB RUNTIME_CORE_SOURCES
+file(GLOB RUNTIME_CORE_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
+)
+# The target compiles start.c with its crt0 options
+list(REMOVE_ITEM RUNTIME_CORE_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/start.c"
 )
 
 add_library(snitch_runtime_core STATIC ${RUNTIME_CORE_SOURCES})

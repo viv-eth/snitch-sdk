@@ -6,12 +6,12 @@
 
 #include <stdint.h>
 
-static inline void snrt_int_cluster_set(uint32_t mask);
+inline void snrt_int_cluster_set(uint32_t mask);
 
-static inline void snrt_int_cluster_clr(uint32_t mask);
+inline void snrt_int_cluster_clr(uint32_t mask);
 
-static inline void snrt_int_clr_mcip_unsafe();
+inline void snrt_int_clr_mcip_unsafe();
 
-static inline void snrt_int_clr_mcip();
+inline void snrt_int_clr_mcip();
 
-static inline void snrt_int_set_mcip();
+inline void snrt_int_set_mcip();

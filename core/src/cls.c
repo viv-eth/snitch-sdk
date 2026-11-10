@@ -4,4 +4,6 @@
 
 #include "snrt.h"
 
-__thread cls_t *_cls_ptr;
+__thread cls_t* _cls_ptr;
+
+extern cls_t* snrt_cls();

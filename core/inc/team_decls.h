@@ -6,15 +6,17 @@
 
 #include <stdint.h>
 
-static inline uint32_t __attribute__((const)) snrt_hartid();
-static inline uint32_t __attribute__((const)) snrt_cluster_num();
-static inline uint32_t __attribute__((const)) snrt_cluster_core_num();
-static inline uint32_t __attribute__((const)) snrt_global_core_base_hartid();
-static inline uint32_t __attribute__((const)) snrt_global_core_num();
-static inline uint32_t __attribute__((const)) snrt_global_core_idx();
-static inline uint32_t __attribute__((const)) snrt_cluster_idx();
-static inline uint32_t __attribute__((const)) snrt_cluster_core_idx();
-static inline uint32_t __attribute__((const)) snrt_cluster_dm_core_num();
-static inline uint32_t __attribute__((const)) snrt_cluster_compute_core_num();
-static inline int __attribute__((const)) snrt_is_compute_core();
-static inline int __attribute__((const)) snrt_is_dm_core();
+inline uint32_t __attribute__((const)) snrt_hartid();
+inline uint32_t __attribute__((const)) snrt_cluster_num();
+inline uint32_t __attribute__((const)) snrt_cluster_core_num();
+inline uint32_t __attribute__((const)) snrt_global_core_base_hartid();
+inline uint32_t __attribute__((const)) snrt_global_core_num();
+inline uint32_t __attribute__((const)) snrt_global_core_idx();
+inline uint32_t __attribute__((const)) snrt_cluster_idx();
+inline uint32_t __attribute__((const)) snrt_cluster_core_idx();
+inline uint32_t __attribute__((const)) snrt_cluster_dm_core_num();
+inline uint32_t __attribute__((const)) snrt_cluster_compute_core_num();
+inline int __attribute__((const)) snrt_is_compute_core();
+inline int __attribute__((const)) snrt_is_dm_core();
+inline uint32_t __attribute__((const)) snrt_remote_core_mask(
+    uint32_t core_mask, uint32_t cluster_idx);

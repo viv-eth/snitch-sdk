@@ -6,18 +6,14 @@
 
 snrt_allocator_t l3_allocator;
 
-#ifdef __cplusplus
-extern uintptr_t snrt_align_up(uintptr_t addr, size_t size, uintptr_t base);
-extern void *snrt_align_up(void *addr, size_t size, void *base);
-extern uintptr_t snrt_align_up_hyperbank(uintptr_t addr);
-extern void *snrt_align_up_hyperbank(void *addr);
-#else
-extern uintptr_t snrt_align_up_uintptr(uintptr_t addr, size_t size,
-                                       uintptr_t base);
-extern void *snrt_align_up_ptr(void *addr, size_t size, void *base);
-extern uintptr_t snrt_align_up_hyperbank_uintptr(uintptr_t addr);
-extern void *snrt_align_up_hyperbank_ptr(void *addr);
-#endif
+SNRT_OVERLOADABLE extern uintptr_t snrt_align_up(uintptr_t addr, size_t size,
+                                                 uintptr_t base);
+SNRT_OVERLOADABLE extern void *snrt_align_up(void *addr, size_t size,
+                                             void *base);
+SNRT_OVERLOADABLE extern uintptr_t snrt_align_up(uintptr_t addr, size_t size);
+SNRT_OVERLOADABLE extern void *snrt_align_up(void *addr, size_t size);
+SNRT_OVERLOADABLE extern uintptr_t snrt_align_up_hyperbank(uintptr_t addr);
+SNRT_OVERLOADABLE extern void *snrt_align_up_hyperbank(void *addr);
 
 extern void *snrt_l1_next();
 extern void *snrt_l3_next();

@@ -27,57 +27,32 @@
  * @param base Base address for the alignment boundaries
  * @return pointer to the allocated memory
  */
-#ifdef __cplusplus
-inline uintptr_t snrt_align_up(uintptr_t addr, size_t size,
-                               uintptr_t base = 0) {
+SNRT_OVERLOADABLE inline uintptr_t snrt_align_up(uintptr_t addr, size_t size,
+                                                 uintptr_t base) {
     return (((addr - base) + size - 1) / size) * size + base;
 }
 
-inline void *snrt_align_up(void *addr, size_t size, void *base = 0) {
+SNRT_OVERLOADABLE inline void *snrt_align_up(void *addr, size_t size,
+                                             void *base) {
     return (void *)snrt_align_up((uintptr_t)addr, size, (uintptr_t)base);
 }
-#else
-inline uintptr_t snrt_align_up_uintptr(uintptr_t addr, size_t size,
-                                       uintptr_t base) {
-    return (((addr - base) + size - 1) / size) * size + base;
+
+// Default arguments are separate overloads, so that C sees the same API
+SNRT_OVERLOADABLE inline uintptr_t snrt_align_up(uintptr_t addr, size_t size) {
+    return snrt_align_up(addr, size, (uintptr_t)0);
 }
 
-inline void *snrt_align_up_ptr(void *addr, size_t size, void *base) {
-    return (void *)snrt_align_up_uintptr((uintptr_t)addr, size,
-                                         (uintptr_t)base);
+SNRT_OVERLOADABLE inline void *snrt_align_up(void *addr, size_t size) {
+    return snrt_align_up(addr, size, (void *)0);
 }
 
-// C11 stand-in for the C++ overloads above, with base defaulting to 0
-#define SNRT_ALIGN_UP(addr, size, base, ...) \
-    _Generic((addr),                         \
-        void *: snrt_align_up_ptr,           \
-        default: snrt_align_up_uintptr)(addr, size, base)
-#define snrt_align_up(...) SNRT_ALIGN_UP(__VA_ARGS__, 0, )
-#endif
-
-#ifdef __cplusplus
-inline uintptr_t snrt_align_up_hyperbank(uintptr_t addr) {
+SNRT_OVERLOADABLE inline uintptr_t snrt_align_up_hyperbank(uintptr_t addr) {
     return snrt_align_up(addr, SNRT_TCDM_HYPERBANK_WIDTH, SNRT_TCDM_START_ADDR);
 }
 
-inline void *snrt_align_up_hyperbank(void *addr) {
+SNRT_OVERLOADABLE inline void *snrt_align_up_hyperbank(void *addr) {
     return (void *)snrt_align_up_hyperbank((uintptr_t)addr);
 }
-#else
-inline uintptr_t snrt_align_up_hyperbank_uintptr(uintptr_t addr) {
-    return snrt_align_up_uintptr(addr, SNRT_TCDM_HYPERBANK_WIDTH,
-                                 SNRT_TCDM_START_ADDR);
-}
-
-inline void *snrt_align_up_hyperbank_ptr(void *addr) {
-    return (void *)snrt_align_up_hyperbank_uintptr((uintptr_t)addr);
-}
-
-#define snrt_align_up_hyperbank(addr) \
-    _Generic((addr),                         \
-        void *: snrt_align_up_hyperbank_ptr, \
-        default: snrt_align_up_hyperbank_uintptr)(addr)
-#endif
 
 //================================================================================
 // Allocation

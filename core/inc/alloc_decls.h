@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "snrt_compat.h"
+
 typedef struct {
     // Base address from where allocation starts
     uint64_t base;

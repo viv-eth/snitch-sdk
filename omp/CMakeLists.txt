@@ -4,7 +4,7 @@
 #
 # Viviane Potocnik <vivianep@iis.ee.ethz.ch>
 
-file(GLOB RUNTIME_OMP_SOURCES
+file(GLOB RUNTIME_OMP_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 

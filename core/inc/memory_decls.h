@@ -6,14 +6,30 @@
 
 #include <stdint.h>
 
-static inline uint32_t __attribute__((const)) snrt_l1_start_addr();
+#include "snrt_compat.h"
 
-static inline uint32_t __attribute__((const)) snrt_l1_end_addr();
+#ifdef SNITCH_CLUSTER_ADDRMAP_CLUSTER_ALIAS_BASE_ADDR
+inline volatile snitch_cluster_t* snrt_cluster_alias();
+#endif
 
-static inline volatile uint32_t *__attribute__((const)) snrt_clint_mutex_ptr();
+SNRT_OVERLOADABLE inline volatile snitch_cluster_t* snrt_cluster(
+    int cluster_idx);
 
-static inline volatile uint32_t *__attribute__((const)) snrt_clint_msip_ptr();
+SNRT_OVERLOADABLE inline volatile snitch_cluster_t* snrt_cluster(void);
 
-static inline volatile uint32_t *__attribute__((const)) snrt_cluster_clint_set_ptr();
+inline uint32_t __attribute__((const)) snrt_l1_start_addr();
 
-static inline volatile uint32_t *__attribute__((const)) snrt_cluster_clint_clr_ptr();
+inline uint32_t __attribute__((const)) snrt_l1_end_addr();
+
+inline volatile uint32_t* __attribute__((const)) snrt_clint_mutex_ptr();
+
+inline volatile uint32_t* __attribute__((const))
+snrt_clint_msip_ptr(uint32_t hartid);
+
+inline volatile uint32_t* __attribute__((const)) snrt_cluster_clint_set_ptr();
+
+inline volatile uint32_t* __attribute__((const)) snrt_cluster_clint_clr_ptr();
+
+inline uint32_t __attribute__((const)) snrt_cluster_perf_counters_addr();
+
+inline volatile uint32_t* __attribute__((const)) snrt_zero_memory_ptr();

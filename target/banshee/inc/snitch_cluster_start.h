@@ -4,8 +4,10 @@
 
 #pragma once
 
-#define SNRT_INIT_TLS
+#include <stdint.h>
+
 #define SNRT_INIT_BSS
+#define SNRT_INIT_TLS
 #define SNRT_INIT_CLS
 #define SNRT_INIT_LIBS
 #define SNRT_CRT0_PRE_BARRIER
@@ -13,8 +15,8 @@
 #define SNRT_CRT0_POST_BARRIER
 #define SNRT_CRT0_EXIT
 
-static inline volatile uint32_t *snrt_exit_code_destination() {
-  return (volatile uint32_t *)0x02000014;
+static inline volatile uint32_t* snrt_exit_code_destination() {
+    return (volatile uint32_t*)0x02000014;
 }
 
 #include "start.h"

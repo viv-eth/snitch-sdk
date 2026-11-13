@@ -4,10 +4,7 @@ Usage
 Building the SDK
 ----------------
 
-The Snitch-SDK is built using RISC-V LLVM 12.0.1 or later to ensure compatibility.
-
-.. important::
-    For LLVM versions less than 15, linker relaxation is not supported and is disabled.
+The Snitch-SDK needs PULP's RISC-V LLVM 18.1 (``llvm-18.1.4-pulp``), which provides ``-mcpu=snitch`` and the Snitch extensions Xssr, Xfrep and Xdma. chimera-sdk builds it with ``make llvm`` and ships it, with picolibc, in its container under ``/app/install``. Older PULP LLVM releases such as ``pulp-llvm-0.12.0`` (LLVM 12) cannot build the runtime.
 
 Generic Environment
 ^^^^^^^^^^^^^^^^^^^
@@ -36,18 +33,20 @@ If you did not globally install the toolchain, you need to specify the ``TOOLCHA
     cmake -DCMAKE_BUILD_TYPE=Release -DSNITCH_DEVICE=<device> -DTOOLCHAIN_DIR=<path-to-toolchain> ..
     cmake --build . -j
 
-.. note:: The ``-DCMAKE_BUILD_TYPE=Release`` flag is used for aggressive optimizations. 
+.. note:: ``Release`` (``-O3``) is the default build type, and ``Debug`` builds use ``-Og``. The DMA functions pass immediates to inline assembly and must be inlined, so the runtime cannot be built at ``-O0``.
+
+The hardware headers are generated from the cluster configuration ``-DSN_HW_CFG=<path>`` (default: ``devices/<device>/cfg/default.json``) with clustergen and PeakRDL, which need the Python packages in ``requirements.txt``. If they live in an inactive virtual environment, pass ``-DPython3_EXECUTABLE=<venv>/bin/python``. For a toolchain without a C library, pass ``-DPICOLIBC_DIR=<picolibc-install>``.
 
 IIS Workstations
 ^^^^^^^^^^^^^^^^
 
-On IIS systems, users can leverage the pre-installed LLVM compiler by activating the riscv environment with the ``riscv`` command. This sets up the necessary environment variables for the toolchain. To build the SDK on an IIS workstation, run:
+IIS systems have no pre-installed PULP LLVM 18.1 (``/usr/pack/riscv-1.0-kgf/pulp-llvm-0.12.0`` is LLVM 12). Build the toolchain and picolibc once with chimera-sdk, into a directory on a scratch disk, and point the SDK at them:
 
 .. code-block:: bash
 
-    riscv <SHELL_TYPE> # Setup the default riscv environment (modifies PATH and LD_LIBRARY_PATH)
+    make -C <chimera-sdk> llvm compiler-rt-riscv-multilib picolibc-multilib INSTALL_DIR=<install>
     mkdir build && cd build
-    cmake -DCMAKE_BUILD_TYPE=Release -DSNITCH_DEVICE=<device> -DTOOLCHAIN_DIR=/usr/pack/riscv-1.0-kgf/pulp-llvm-0.12.0 ..
+    cmake -DSNITCH_DEVICE=<device> -DTOOLCHAIN_DIR=<install>/llvm-18.1.4-pulp -DPICOLIBC_DIR=<install>/picolibc ..
     cmake --build . -j
 
 Targets
@@ -78,16 +77,17 @@ Replace ``<device>`` with the appropriate device flavor and ``<path-to-binary>``
 Visual Studio Code Integration
 ------------------------------
 
-To enable automatic configuration of the C/C++ extension and integrated CMake build flow in Visual Studio Code on IIS workstations, add the following to your ``.vscode/settings.json``:
+To enable automatic configuration of the C/C++ extension and integrated CMake build flow in Visual Studio Code, add the following to your ``.vscode/settings.json``:
 
 .. code-block:: json
 
     {
         "cmake.configureSettings": {
-            "TOOLCHAIN_DIR": "/usr/pack/riscv-1.0-kgf/pulp-llvm-0.12.0",
+            "TOOLCHAIN_DIR": "<install>/llvm-18.1.4-pulp",
+            "PICOLIBC_DIR": "<install>/picolibc",
             "SNITCH_DEVICE": "snitch_cluster"
         }
     }
 
-If you are not on an IIS system, adjust the paths according to your local installation.
+Replace ``<install>`` with the directory that holds your toolchain.
 

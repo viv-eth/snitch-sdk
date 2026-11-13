@@ -4,92 +4,112 @@
 #
 # Viviane Potocnik <vivianep@iis.ee.ethz.ch>
 
-# This module provides functions to generate hardware and peripheral headers.
+# This module generates the hardware headers with clustergen.py and PeakRDL, as upstream snitch_cluster does.
 #
 # Required variables (set them before including this module):
-#   SN_TEMPLATE_DIR        - Directory with template (*.tpl) files for hardware headers.
-#   SN_HW_CFG              - Path to the hardware configuration file (e.g., default.hjson).
+#   SN_TEMPLATE_DIR        - Directory with the templates (*.tpl) and snitch_cluster_peripheral_reg.rdl.
+#   SN_HW_CFG              - Path to the hardware configuration file (e.g., default.json).
 #   SN_GENERATED_DIR       - Directory where the hardware headers are generated.
-#   SNITCH_ROOT_DIR        - Root directory of the Snitch project.
-#   GENERATED_CONFIG_DIR   - Directory where the peripheral header will be generated.
-#   Python3_EXECUTABLE     - Path to the Python3 executable.
+#   SNITCH_ROOT_DIR        - Root directory of the Snitch SDK.
+#   Python3_EXECUTABLE     - Path to a Python3 executable with the packages from requirements.txt.
 #
 # Optionally, you can set:
-#   CLUSTER_GEN_PY         - Path to clustergen.py (defaults to <CMAKE_CURRENT_SOURCE_DIR>/scripts/clustergen.py)
-#   BENDER                 - Path to the Bender executable; if not set, it will be searched.
+#   CLUSTER_GEN_PY         - Path to clustergen.py (defaults to <SNITCH_ROOT_DIR>/scripts/clustergen/clustergen.py)
+#   PEAKRDL                - PeakRDL command (defaults to <Python3_EXECUTABLE> -m peakrdl)
 
-# Function to generate hardware headers.
-function(generate_hw_headers)
+# Function to fill every template with clustergen.py: <name>.tpl generates <name>.
+function(generate_hw_headers OUTPUTS_VAR)
   # Use a default for clustergen.py if not already defined.
   if(NOT DEFINED CLUSTER_GEN_PY)
-  set(CLUSTER_GEN_PY "${SNITCH_ROOT_DIR}/scripts/clustergen.py")
+    set(CLUSTER_GEN_PY "${SNITCH_ROOT_DIR}/scripts/clustergen/clustergen.py")
   endif()
+  get_filename_component(CLUSTER_GEN_DIR ${CLUSTER_GEN_PY} DIRECTORY)
 
   file(GLOB TEMPLATE_FILES CONFIGURE_DEPENDS "${SN_TEMPLATE_DIR}/*.tpl")
 
-  set(GENERATED_HEADERS "")
+  set(GENERATED_FILES "")
   foreach(template ${TEMPLATE_FILES})
-    get_filename_component(template_name ${template} NAME_WE)
-    set(output_file "${SN_GENERATED_DIR}/${template_name}.h")
+    get_filename_component(template_name ${template} NAME)
+    string(REGEX REPLACE "\\.tpl$" "" output_name ${template_name})
+    set(output_file "${SN_GENERATED_DIR}/${output_name}")
     add_custom_command(
       OUTPUT ${output_file}
       DEPENDS ${template} ${SN_HW_CFG} ${CLUSTER_GEN_PY}
-      COMMAND ${Python3_EXECUTABLE} ${CLUSTER_GEN_PY} 
-              --clustercfg ${SN_HW_CFG} 
-              --template ${template} 
-              --outdir ${SN_GENERATED_DIR}
-      COMMENT "Generating hardware header ${output_file} with clustergen.py"
+              ${CLUSTER_GEN_DIR}/cluster.py ${CLUSTER_GEN_DIR}/snitch_cluster.schema.json
+      COMMAND ${Python3_EXECUTABLE} ${CLUSTER_GEN_PY}
+              --clustercfg ${SN_HW_CFG}
+              --template ${template}
+              --output ${output_file}
+      COMMENT "[SNITCH-SDK] Generating ${output_name} with clustergen.py"
     )
-    list(APPEND GENERATED_HEADERS ${output_file})
+    list(APPEND GENERATED_FILES ${output_file})
   endforeach()
 
-  add_custom_target(generate_hw_headers ALL DEPENDS ${GENERATED_HEADERS})
+  set(${OUTPUTS_VAR} ${GENERATED_FILES} PARENT_SCOPE)
 endfunction()
 
-# Function to generate the peripheral header.
-function(generate_peripheral_header)
-  # Define the peripheral directory and register configuration file.
-  set(SN_PERIPH_REG_CFG "${SN_TEMPLATE_DIR}/snitch_cluster_peripheral_reg.hjson")
-  set(SN_PERIPH_HEADER "${SN_GENERATED_DIR}/snitch_cluster_peripheral.h")
-
-  # Locate Bender if not already defined.
-  # VIVIANEP: We have to execute bender here, since the regtool.py uses bender patches
-  # TODO: Change this approach in the `register_interface` repo to avoid bender
-  if(NOT DEFINED BENDER)
-    find_program(BENDER_EXECUTABLE NAMES bender)
-    if(NOT BENDER_EXECUTABLE)
-      message(FATAL_ERROR "Bender not found. Please install Bender or set the BENDER variable.")
-    endif()
-    set(BENDER "${BENDER_EXECUTABLE}")
+# Function to generate the C headers from the SystemRDL descriptions with PeakRDL.
+function(generate_rdl_headers OUTPUTS_VAR)
+  if(NOT DEFINED PEAKRDL)
+    set(PEAKRDL ${Python3_EXECUTABLE} -m peakrdl)
   endif()
 
-  # Get the register interface path from Bender.
-  execute_process(
-    COMMAND ${BENDER} path register_interface
-    WORKING_DIRECTORY ${SNITCH_ROOT_DIR}
-    OUTPUT_VARIABLE REGISTER_INTERFACE_PATH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  # Append the subpath to regtool.py.
-  set(REGGEN "${REGISTER_INTERFACE_PATH}/vendor/lowrisc_opentitan/util/regtool.py")
+  set(PERIPH_RDL "${SN_TEMPLATE_DIR}/snitch_cluster_peripheral_reg.rdl")
+  set(CLUSTER_RDL "${SN_GENERATED_DIR}/snitch_cluster.rdl")
+  set(ADDRMAP_RDL "${SN_GENERATED_DIR}/snitch_cluster_addrmap.rdl")
+  set(RDL_INCDIRS -I ${SN_TEMPLATE_DIR} -I ${SN_GENERATED_DIR})
+
+  set(ADDRMAP_H "${SN_GENERATED_DIR}/snitch_cluster_addrmap.h")
+  set(RAW_ADDRMAP_H "${SN_GENERATED_DIR}/snitch_cluster_raw_addrmap.h")
+  set(PERIPH_H "${SN_GENERATED_DIR}/snitch_cluster_peripheral.h")
+  set(PERIPH_ADDRMAP_H "${SN_GENERATED_DIR}/snitch_cluster_peripheral_addrmap.h")
 
   add_custom_command(
-    OUTPUT "${SN_PERIPH_HEADER}"
-    COMMAND ${Python3_EXECUTABLE} ${REGGEN} -D -o "${SN_PERIPH_HEADER}" "${SN_PERIPH_REG_CFG}"
-    DEPENDS "${SN_PERIPH_REG_CFG}"
-    COMMENT "[SNITCH-SDK] Generating snitch_cluster_peripheral.h from ${SN_PERIPH_REG_CFG}"
+    OUTPUT ${ADDRMAP_H}
+    DEPENDS ${ADDRMAP_RDL} ${CLUSTER_RDL} ${PERIPH_RDL}
+    COMMAND ${PEAKRDL} c-header ${ADDRMAP_RDL} -o ${ADDRMAP_H} -i -b ltoh ${RDL_INCDIRS}
+    COMMENT "[SNITCH-SDK] Generating snitch_cluster_addrmap.h with PeakRDL"
+  )
+  add_custom_command(
+    OUTPUT ${RAW_ADDRMAP_H}
+    DEPENDS ${ADDRMAP_RDL} ${CLUSTER_RDL} ${PERIPH_RDL}
+    COMMAND ${PEAKRDL} raw-header ${ADDRMAP_RDL} -o ${RAW_ADDRMAP_H}
+            --base_name snitch_cluster_raw_addrmap --format c ${RDL_INCDIRS}
+    COMMENT "[SNITCH-SDK] Generating snitch_cluster_raw_addrmap.h with PeakRDL"
+  )
+  add_custom_command(
+    OUTPUT ${PERIPH_H}
+    DEPENDS ${PERIPH_RDL}
+    COMMAND ${PEAKRDL} c-header ${PERIPH_RDL} -o ${PERIPH_H} -i -b ltoh
+    COMMENT "[SNITCH-SDK] Generating snitch_cluster_peripheral.h with PeakRDL"
+  )
+  add_custom_command(
+    OUTPUT ${PERIPH_ADDRMAP_H}
+    DEPENDS ${PERIPH_RDL}
+    COMMAND ${PEAKRDL} raw-header ${PERIPH_RDL} -o ${PERIPH_ADDRMAP_H} --format c
+    COMMENT "[SNITCH-SDK] Generating snitch_cluster_peripheral_addrmap.h with PeakRDL"
   )
 
-  add_custom_target(generate_snitch_cluster_peripheral_header ALL
-    DEPENDS "${SN_PERIPH_HEADER}"
-  )
+  set(${OUTPUTS_VAR} ${ADDRMAP_H} ${RAW_ADDRMAP_H} ${PERIPH_H} ${PERIPH_ADDRMAP_H} PARENT_SCOPE)
 endfunction()
 
 # Function to aggregate all header generation.
 function(generate_all_headers)
-  generate_hw_headers()
-  generate_peripheral_header()
-  add_custom_target(generate_all_headers ALL
-    DEPENDS generate_hw_headers generate_snitch_cluster_peripheral_header
+  set(SN_PY_MODULES "json5, jsonref, jsonschema, mako")
+  if(NOT DEFINED PEAKRDL)
+    string(APPEND SN_PY_MODULES ", peakrdl, peakrdl_cheader, peakrdl_rawheader")
+  endif()
+  execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import ${SN_PY_MODULES}"
+    RESULT_VARIABLE SN_PY_MODULES_MISSING
+    OUTPUT_QUIET ERROR_QUIET
   )
+  if(SN_PY_MODULES_MISSING)
+    message(FATAL_ERROR "[SNITCH-SDK] ${Python3_EXECUTABLE} cannot import ${SN_PY_MODULES}: "
+                        "install requirements.txt or set Python3_EXECUTABLE to an environment with them.")
+  endif()
+
+  generate_hw_headers(HW_HEADERS)
+  generate_rdl_headers(RDL_HEADERS)
+  add_custom_target(generate_all_headers ALL DEPENDS ${HW_HEADERS} ${RDL_HEADERS})
 endfunction()

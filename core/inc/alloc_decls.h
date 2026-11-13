@@ -7,23 +7,25 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "snrt_compat.h"
+
 typedef struct {
-  // Base address from where allocation starts
-  uint32_t base;
-  // End address up to which allocation is allowed
-  uint32_t end;
-  // Address of the next allocated block
-  uint32_t next;
+    // Base address from where allocation starts
+    uint64_t base;
+    // End address up to which allocation is allowed
+    uint64_t end;
+    // Address of the next allocated block
+    uint64_t next;
 } snrt_allocator_t;
 
-static inline void *snrt_l1_next();
+inline void *snrt_l1_next();
 
-static inline void *snrt_l3_next();
+inline void *snrt_l3_next();
 
-static inline void *snrt_l1_alloc(size_t size);
+inline void *snrt_l1_alloc(size_t size);
 
-static inline void snrt_l1_update_next(void *next);
+inline void snrt_l1_update_next(void *next);
 
-static inline void *snrt_l3_alloc(size_t size);
+inline void *snrt_l3_alloc(size_t size);
 
-static inline void snrt_alloc_init();
+inline void snrt_alloc_init();

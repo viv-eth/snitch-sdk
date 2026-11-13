@@ -4,30 +4,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import argparse
-import hjson
+import json5
 import pathlib
 import sys
 import re
-
 from jsonref import JsonRef
-from clustergen.cluster import SnitchCluster
-from mako.template import Template
-
-# Regex to find hex numbers with optional underscores
-HEX_PATTERN = re.compile(r"0x[0-9a-fA-F]+(?:_[0-9a-fA-F]+)*")
+from cluster import SnitchCluster
+import mako
 
 
-def preprocess_hex_in_hjson(text):
-    """ Converts hex numbers (e.g., 0x8000_0000) to decimal before parsing HJSON. """
-
-    def hex_to_decimal(match):
-        hex_str = match.group(0).replace("_", "")  # Remove underscores
-        return str(int(hex_str, 16))  # Convert to decimal and replace
-
-    return HEX_PATTERN.sub(hex_to_decimal, text)
-
-
-def write_template(tpl_path, outdir, fname=None, **kwargs):
+def write_template(tpl_path, output_path, **kwargs):
 
     # Compile a regex to trim trailing whitespaces on lines.
     re_trailws = re.compile(r'[ \t\r]+$', re.MULTILINE)
@@ -35,10 +21,13 @@ def write_template(tpl_path, outdir, fname=None, **kwargs):
     if tpl_path:
         tpl_path = pathlib.Path(tpl_path).absolute()
         if tpl_path.exists():
-            tpl = Template(filename=str(tpl_path))
-            fname = tpl_path.with_suffix("").name if not fname else fname
-            with open(outdir / fname, "w") as file:
-                code = tpl.render_unicode(**kwargs)
+            tpl = mako.template.Template(filename=str(tpl_path))
+            with open(output_path, "w") as file:
+                try:
+                    code = tpl.render_unicode(**kwargs)
+                except Exception:
+                    print(mako.exceptions.text_error_template().render())
+                    raise
                 code = re_trailws.sub("", code)
                 file.write(code)
         else:
@@ -54,48 +43,27 @@ def main():
                         type=argparse.FileType('r'),
                         required=True,
                         help="A cluster configuration file")
-    parser.add_argument("--outdir",
+    parser.add_argument("--output",
                         "-o",
                         type=pathlib.Path,
                         required=True,
-                        help="Target directory.")
-    parser.add_argument("--memories",
-                        action="store_true",
-                        help="Generate memories")
+                        help="Output file path")
     parser.add_argument("--template",
                         metavar="template",
                         help="Name of the template file")
 
     args = parser.parse_args()
 
-    # Read and preprocess HJSON file
+    # Read and parse JSON5 file
     with args.clustercfg as file:
         try:
-            srcfull = file.read()
-            srcfull = preprocess_hex_in_hjson(
-                srcfull)  # Convert hex to decimal
-            obj = hjson.loads(srcfull,
-                              use_decimal=True)  # Now parse clean HJSON
+            obj = json5.loads(file.read())  # JSON5 natively supports hex & comments
             obj = JsonRef.replace_refs(obj)
 
         except ValueError:
             raise SystemExit(sys.exc_info()[1])
 
     cluster = SnitchCluster(obj)
-
-    if not args.outdir.is_dir():
-        exit("Out directory is not a valid path.")
-
-    outdir = args.outdir
-    outdir.mkdir(parents=True, exist_ok=True)
-
-    ##############
-    # Misc files #
-    ##############
-
-    if args.memories:
-        with open(outdir / "memories.json", "w") as f:
-            f.write(cluster.memory_cfg())
 
     ####################
     # Generic template #
@@ -107,7 +75,7 @@ def main():
     }
 
     if args.template:
-        write_template(args.template, outdir, **kwargs)
+        write_template(args.template, args.output, **kwargs)
 
 
 if __name__ == "__main__":

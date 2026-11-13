@@ -12,20 +12,22 @@
  * @brief Put the hart into wait for interrupt state
  *
  */
-static inline void snrt_wfi() { asm volatile("wfi"); }
+inline void snrt_wfi() { asm volatile("wfi"); }
 
-static inline void snrt_nop() { asm volatile("nop" : : :); }
+inline void snrt_nop() { asm volatile("nop" : : :); }
 
-static inline uint32_t snrt_mcycle() {
-  uint32_t register r;
-  asm volatile("csrr %0, mcycle" : "=r"(r) : : "memory");
-  return r;
+inline void snrt_fence() { asm volatile("fence" : : :); }
+
+inline uint32_t snrt_mcycle() {
+    uint32_t r;
+    asm volatile("csrr %0, mcycle" : "=r"(r) : : "memory");
+    return r;
 }
 
-static inline uint32_t snrt_minstret() {
-  uint32_t register r;
-  asm volatile("csrr %0, minstret" : "=r"(r) : : "memory");
-  return r;
+inline uint32_t snrt_minstret() {
+    uint32_t r;
+    asm volatile("csrr %0, minstret" : "=r"(r) : : "memory");
+    return r;
 }
 
 /**
@@ -36,7 +38,7 @@ static inline uint32_t snrt_minstret() {
  * @param irq one of IRQ_[S/H/M]_[SOFT/TIMER/EXT]
  * interrupts
  */
-static inline void snrt_interrupt_enable(uint32_t irq) { set_csr(mie, 1 << irq); }
+inline void snrt_interrupt_enable(uint32_t irq) { set_csr(mie, 1 << irq); }
 
 /**
  * @brief Disable interrupt source
@@ -44,7 +46,7 @@ static inline void snrt_interrupt_enable(uint32_t irq) { set_csr(mie, 1 << irq);
  *
  * @param irq one of IRQ_[S/H/M]_[SOFT/TIMER/EXT]
  */
-static inline void snrt_interrupt_disable(uint32_t irq) { clear_csr(mie, 1 << irq); }
+inline void snrt_interrupt_disable(uint32_t irq) { clear_csr(mie, 1 << irq); }
 
 /**
  * @brief Globally enable M-mode interrupts
@@ -52,13 +54,13 @@ static inline void snrt_interrupt_disable(uint32_t irq) { clear_csr(mie, 1 << ir
  * __snrt_crt0_interrupt_handler service the interrupt and continue normal
  * execution. Enable interrupt sources with snrt_interrupt_enable
  */
-static inline void snrt_interrupt_global_enable(void) {
-  set_csr(mstatus, MSTATUS_MIE); // set M global interrupt enable
+inline void snrt_interrupt_global_enable(void) {
+    set_csr(mstatus, MSTATUS_MIE);  // set M global interrupt enable
 }
 /**
  * @brief Globally disable interrupts
  * @details
  */
-static inline void snrt_interrupt_global_disable(void) {
-  clear_csr(mstatus, MSTATUS_MIE);
+inline void snrt_interrupt_global_disable(void) {
+    clear_csr(mstatus, MSTATUS_MIE);
 }

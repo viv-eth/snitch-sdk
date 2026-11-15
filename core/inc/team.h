@@ -17,6 +17,11 @@
 
 #include "snrt_platform.h"
 
+// Cores between the compute and the DM cores, e.g. one driving a vector unit
+#ifndef SNRT_CLUSTER_ACC_CORE_NUM
+#define SNRT_CLUSTER_ACC_CORE_NUM 0
+#endif
+
 /**
  * @brief Get the RISC-V hardware thread ID (hartid).
  *
@@ -75,7 +80,8 @@ inline uint32_t __attribute__((const)) snrt_global_core_num() {
  */
 inline uint32_t __attribute__((const)) snrt_global_compute_core_num() {
     return snrt_global_core_num() -
-           snrt_cluster_num() * snrt_cluster_dm_core_num();
+           snrt_cluster_num() *
+               (snrt_cluster_dm_core_num() + snrt_cluster_acc_core_num());
 }
 
 /**
@@ -94,7 +100,8 @@ inline uint32_t __attribute__((const)) snrt_global_core_idx() {
  */
 inline uint32_t __attribute__((const)) snrt_global_compute_core_idx() {
     return snrt_global_core_idx() -
-           snrt_cluster_idx() * snrt_cluster_dm_core_num();
+           snrt_cluster_idx() *
+               (snrt_cluster_dm_core_num() + snrt_cluster_acc_core_num());
 }
 
 /**
@@ -133,13 +140,18 @@ inline uint32_t __attribute__((const)) snrt_cluster_dm_core_num() {
     return SNRT_CLUSTER_DM_CORE_NUM;
 }
 
+inline uint32_t __attribute__((const)) snrt_cluster_acc_core_num() {
+    return SNRT_CLUSTER_ACC_CORE_NUM;
+}
+
 /**
  * @brief Get the number of compute cores in the current cluster.
  *
  * @return The number of compute cores in the current cluster.
  */
 inline uint32_t __attribute__((const)) snrt_cluster_compute_core_num() {
-    return snrt_cluster_core_num() - snrt_cluster_dm_core_num();
+    return snrt_cluster_core_num() - snrt_cluster_dm_core_num() -
+           snrt_cluster_acc_core_num();
 }
 
 /**
@@ -166,7 +178,8 @@ inline int __attribute__((const)) snrt_cluster_is_last_compute_core() {
  * @return True if the current core is a DM core, false otherwise.
  */
 inline int __attribute__((const)) snrt_is_dm_core() {
-    return !snrt_is_compute_core();
+    return snrt_cluster_core_idx() >=
+           snrt_cluster_core_num() - snrt_cluster_dm_core_num();
 }
 
 // Translates this cluster's core_mask to cluster_idx; DM cores stay last
@@ -174,7 +187,8 @@ inline uint32_t __attribute__((const))
 snrt_remote_core_mask(uint32_t core_mask, uint32_t cluster_idx) {
     uint32_t num = snrt_cluster_compute_core_num();
     uint32_t remote_num = snrt_platform_cluster_core_num(cluster_idx) -
-                          snrt_cluster_dm_core_num();
+                          snrt_cluster_dm_core_num() -
+                          snrt_cluster_acc_core_num();
     uint32_t compute_mask = (1u << (num < remote_num ? num : remote_num)) - 1;
     return (core_mask & compute_mask) | ((core_mask >> num) << remote_num);
 }

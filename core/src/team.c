@@ -34,6 +34,8 @@ extern int snrt_is_dm_core();
 
 extern uint32_t snrt_cluster_dm_core_num();
 
+extern uint32_t snrt_cluster_acc_core_num();
+
 extern uint32_t snrt_remote_core_mask(uint32_t core_mask, uint32_t cluster_idx);
 
 extern uint32_t snrt_platform_cluster_num(void);

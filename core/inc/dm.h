@@ -139,7 +139,8 @@ static inline void wake_dm(void) {
     // wait for DM to sleep before sending wakeup
     while (!__atomic_load_n(&dm_p->dm_wfi, __ATOMIC_RELAXED))
         ;
-    snrt_int_cluster_set(1 << snrt_cluster_compute_core_num());
+    snrt_int_cluster_set(
+        1 << (snrt_cluster_core_num() - snrt_cluster_dm_core_num()));
 }
 #endif  // #ifdef DM_USE_GLOBAL_CLINT
 

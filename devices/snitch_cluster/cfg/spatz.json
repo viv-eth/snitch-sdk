@@ -2,15 +2,14 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-// Cluster configuration for a simple testbench system.
 {
     cluster: {
-        cluster_base_addr: 0x1000_0000,
-        cluster_base_offset: 0, // 0x0
+        cluster_base_addr: 0x10000000,
+        cluster_base_offset: 0,
         cluster_base_hartid: 0,
         addr_width: 48,
         data_width: 64,
-        user_width: 5, // clog2(total number of clusters)
+        atomic_id_width: 5,
         tcdm: {
             size: 128,
             banks: 32,
@@ -21,11 +20,15 @@
         dma_data_width: 512,
         dma_axi_req_fifo_depth: 24,
         dma_req_fifo_depth: 8,
+        dma_enable_compute: true,
+        dma_compute_transpose_full_duplex: false,
         narrow_trans: 4,
         wide_trans: 32,
-        dma_user_width: 1,
         // We don't need Snitch debugging in Occamy
         enable_debug: false,
+        enable_xif: false,
+        // DCA adaption for Spatz is not yet implemented
+        enable_dca: false,
         // We don't need Snitch (core-internal) virtual memory support
         vm_support: false,
         // Memory configuration inputs
@@ -62,14 +65,11 @@
             // Hive 0
             {
                 icache: {
-                    size: 8, // total instruction cache size in kByte
-                    sets: 2, // number of ways
-                    cacheline: 256 // word size in bits
+                    size: 16, // total instruction cache size in kByte
+                    ways: 2, // number of ways
+                    cacheline: 512 // word size in bits
                 },
                 cores: [
-                    { $ref: "#/compute_core_template" },
-                    { $ref: "#/compute_core_template" },
-                    { $ref: "#/compute_core_template" },
                     { $ref: "#/compute_core_template" },
                     { $ref: "#/dma_core_template" },
                 ]
@@ -78,65 +78,66 @@
     },
     external_addr_regions: [
         {
-            name: "dram"
-            address: 0x8000_0000,
-            length: 0x8000_0000,
+            name: "dram",
+            address: 0x80000000,
+            length: 0x80000000,
             cacheable: true
         },
         {
-            name: "clint"
-            address: 0xFFFF_0000,
+            name: "clint",
+            address: 0xFFFF0000,
             length: 0x1000
         },
     ],
     // Templates.
     compute_core_template: {
-        isa: "rv32imafd",
-        xssr: true,
-        xfrep: true,
+        isa: "rv32imafdv",
+        xssr: false,
+        xfrep: false,
+        xcopift: false,
         xdma: false,
-        xf16: true,
+        zfh: true,
         xf16alt: true,
         xf8: true,
         xf8alt: true,
         xfdotp: true,
         xfvec: true,
-        ssr_nr_credits: 4,
-        num_int_outstanding_loads: 1,
+        num_int_outstanding_loads: 4,
         num_int_outstanding_mem: 4,
         num_fp_outstanding_loads: 4,
         num_fp_outstanding_mem: 4,
-        num_sequencer_instructions: 16,
         num_dtlb_entries: 1,
         num_itlb_entries: 1,
-        // SSSR configuration below
-        ssr_intersection: true,
-        ssr_intersection_triple: [0, 1, 2],
-        ssrs: [
-            {indirection: true},    // Master 0
-            {indirection: true},    // Master 1
-            {},                     // Slave
-        ],
-        // Enable division/square root unit
-        Xdiv_sqrt: true,
+        spatz: {
+            num_outstanding_loads: 4,
+            n_ipu: 1,
+            n_fpu: 8,
+            vlen: 512,
+            spatz_nports: 8,
+            double_bw: false,
+            spatz_fpu: true,
+            mempool: false,
+            buf_fpu: 1,
+            rvf: true,
+            rvd: true
+        }
     },
     dma_core_template: {
         isa: "rv32imafd",
-        Xdiv_sqrt: true,
         xdma: true,
         xssr: false,
         xfrep: false,
-        xf16: false,
+        xcopift: false,
+        zfh: true,
         xf16alt: false,
         xf8: false,
         xf8alt: false,
         xfdotp: false,
         xfvec: false,
-        num_int_outstanding_loads: 1,
+        num_int_outstanding_loads: 4,
         num_int_outstanding_mem: 4,
         num_fp_outstanding_loads: 4,
         num_fp_outstanding_mem: 4,
-        num_sequencer_instructions: 16,
         num_dtlb_entries: 1,
         num_itlb_entries: 1,
     }

@@ -54,7 +54,6 @@ class Generator(object):
     Generator class which contains common component to generate different systems.
     @root_schema: Schema object to which the generator corresponds.
     """
-
     def __init__(self, root_schema, remote_schemas=[]):
         self.root_schema_path = root_schema
         self.root_schema = read_schema(root_schema)
@@ -74,8 +73,8 @@ class Generator(object):
     def validate(self, cfg):
         # Validate the schema. This can fail.
         try:
-            DefaultValidator(self.root_schema,
-                             resolver=self.resolver).validate(cfg)
+            DefaultValidator(
+                self.root_schema, resolver=self.resolver).validate(cfg)
         except ValidationError as e:
             print(e)
             exit(e)
@@ -90,8 +89,9 @@ class RiscvISA:
     a: bool = False
     f: bool = False
     d: bool = False
+    v: bool = False
 
-    isa_string = re.compile(r"^rv32(i|e)([m|a|f|d]*)$")
+    isa_string = re.compile(r"^rv32(i|e)([m|a|f|d|v]*)$")
 
 
 def parse_isa_string(s):
@@ -121,7 +121,6 @@ class PMA(Enum):
 
 
 class PMACfg(object):
-
     def __init__(self):
         self.regions = list()
 
@@ -130,16 +129,13 @@ class PMACfg(object):
 
     def add_region_length(self, pma, base, length, addr_width):
         # The base *must* be aligned to the length, i.e. only one region is added.
-        is_length_power_of_two = (length != 0) and (length & (length - 1) == 0)
+        is_length_power_of_two = (length != 0) and (length & (length-1) == 0)
         # Python uses arbitrary-precision integers --> we can support any address width
         mask_addr_space = ((1 << addr_width) - 1)
         mask = mask_addr_space & ~(length - 1)
         is_mask_aligned = ((~mask & base) == 0)
-        if (not is_length_power_of_two) or (mask
-                                            == 0) or (not is_mask_aligned):
-            exit(
-                "Cacheable regions must have a power-of-two length aligned to their base."
-            )
+        if (not is_length_power_of_two) or (mask == 0) or (not is_mask_aligned):
+            exit("Cacheable regions must have a power-of-two length aligned to their base.")
         else:
             self.add_region(pma, base, mask)
 
@@ -154,8 +150,7 @@ class SnitchCluster(Generator):
         Initialize with a given configuration. The constructor checks conformans
         to the cluster schema and constructs a `cfg` object.
         """
-        super().__init__(
-            Path(__file__).parent / "schema/snitch_cluster.schema.json")
+        super().__init__(Path(__file__).parent / "snitch_cluster.schema.json")
         self.mems = set()
         self.mems_desc = dict()
         self.validate(cfg)
@@ -164,7 +159,6 @@ class SnitchCluster(Generator):
         if self.cfg_validate():
             exit("Failed parameter validation.")
 
-        self.cfg['pkg_name'] = "{}_pkg".format(self.cfg['cluster']['name'])
         self.calc_cache_sizes()
 
         self.gen_pma_cfg()
@@ -191,7 +185,8 @@ class SnitchCluster(Generator):
             byte_enable,  # byte_enable
             speed_optimized,  # speed optimized
             density_optimized,  # density optimized
-            dual_port)
+            dual_port
+        )
         self.mems.add(mem)
         if mem in self.mems_desc:
             self.mems_desc[mem] += [desc]
@@ -200,11 +195,11 @@ class SnitchCluster(Generator):
 
     def memory_cfg(self):
         # Add TCDMs
-        self.add_mem(self.cfg['tcdm']['depth'],
-                     self.cfg['data_width'],
+        self.add_mem(self.cfg['cluster']['tcdm']['depth'],
+                     self.cfg['cluster']['data_width'],
                      desc='tcdm')
         # Add instruction caches
-        for i, h in enumerate(self.cfg['hives']):
+        for i, h in enumerate(self.cfg['cluster']['hives']):
             self.add_mem(h['icache']['depth'],
                          h['icache']['cacheline'],
                          desc='icache data (hive {})'.format(i),
@@ -234,28 +229,24 @@ class SnitchCluster(Generator):
     def calc_cache_sizes(self):
         # Calculate TCDM parameters
         tcdm_bytes = self.cfg['cluster']['data_width'] // 8
-        self.cfg['cluster']['tcdm'][
-            'depth'] = self.cfg['cluster']['tcdm']['size'] * 1024 // (
-                self.cfg['cluster']['tcdm']['banks'] * tcdm_bytes)
+        self.cfg['cluster']['tcdm']['depth'] = self.cfg['cluster']['tcdm']['size'] * 1024 // (
+            self.cfg['cluster']['tcdm']['banks'] * tcdm_bytes)
         # Calc icache parameters
         for i, hive in enumerate(self.cfg['cluster']['hives']):
-            cl_bytes = self.cfg['cluster']['hives'][i]['icache'][
-                'cacheline'] // 8
-            self.cfg['cluster']['hives'][i]['icache']['depth'] = self.cfg[
-                'cluster']['hives'][i]['icache']['size'] * 1024 // self.cfg[
-                    'cluster']['hives'][i]['icache']['sets'] // cl_bytes
+            cl_bytes = self.cfg['cluster']['hives'][i]['icache']['cacheline'] // 8
+            self.cfg['cluster']['hives'][i]['icache']['depth'] = self.cfg['cluster']['hives'][i][
+                'icache']['size'] * 1024 // self.cfg['cluster']['hives'][i]['icache'][
+                    'ways'] // cl_bytes
             # tag width
             self.tag_width = self.cfg['cluster']['addr_width'] - clog2(
-                hive['icache']['cacheline'] // 8) - clog2(
-                    hive['icache']['depth']) + 3
+                    hive['icache']['cacheline'] // 8) - clog2(hive['icache']['depth']) + 3
 
     def gen_pma_cfg(self):
         # Check if the configuration has legal cacheable regions
         pma_cfg = PMACfg()
         for region in self.cfg['external_addr_regions']:
             if region["cacheable"]:
-                pma_cfg.add_region_length(PMA.CACHED, region['address'],
-                                          region['length'],
+                pma_cfg.add_region_length(PMA.CACHED, region['address'], region['length'],
                                           self.cfg['cluster']['addr_width'])
         # Populate the list of cached regions
         self.cfg['pmas'] = dict()
@@ -265,28 +256,20 @@ class SnitchCluster(Generator):
                 self.cfg['pmas']['cached'].append((pma[1], pma[2]))
 
     def parse_isect_ssr(self, ssr, core):
-        ssr.update({
-            'isect_master': False,
-            'isect_master_idx': False,
-            'isect_slave': False
-        })
+        ssr.update({'isect_master': False, 'isect_master_idx': False, 'isect_slave': False})
         if core['ssr_intersection']:
             ssr_isect_triple = core['ssr_intersection_triple']
             if ssr['reg_idx'] in ssr_isect_triple[0:2]:
                 if not ssr['indirection']:
-                    raise ValueError(
-                        'An intersection master SSR must be indirection-capable'
-                    )
+                    raise ValueError('An intersection master SSR must be indirection-capable')
                 ssr['isect_master'] = True
-                ssr['isect_master_idx'] = (
-                    ssr['reg_idx'] == ssr_isect_triple[1])
+                ssr['isect_master_idx'] = (ssr['reg_idx'] == ssr_isect_triple[1])
             if ssr['reg_idx'] == ssr_isect_triple[2]:
-                ssr['indirection'] = True  # Required for indirector generation, but not functional
+                ssr['indirection'] = True   # Required for indirector generation, but not functional
                 ssr['isect_slave'] = True
 
     def parse_cores(self):
         """Parse cores struct"""
-
         def gen_mask(c, s):
             return "{}'b{}".format(c, ''.join(reversed(s)))
 
@@ -294,11 +277,11 @@ class SnitchCluster(Generator):
         for i, core_list in enumerate(self.cfg['cluster']['hives']):
             for core in core_list['cores']:
                 core['hive'] = i
-                core['isa_parsed'] = parse_isa_string(core['isa'])
+                core['isa_parsed'] = parse_isa_string(
+                    core['isa'])
 
                 # Enforce consistent config if no SSRs
-                if not core['xssr'] or 'ssrs' not in core or not len(
-                        core['ssrs']):
+                if not core['xssr'] or 'ssrs' not in core or not len(core['ssrs']):
                     core['xssr'] = False
                     core['ssrs'] = []
                 # Assign SSR register indices and intersection roles
@@ -311,11 +294,10 @@ class SnitchCluster(Generator):
                 # Set default SSR parameters
                 for ssr in core['ssrs']:
                     if ssr['pointer_width'] is None:
-                        ssr['pointer_width'] = 10 + clog2(
-                            self.cfg['cluster']['tcdm']['size'])
+                        ssr['pointer_width'] = 10 + clog2(self.cfg['cluster']['tcdm']['size'])
                     if ssr['index_width'] is None:
                         ssr['index_width'] = ssr['pointer_width']
-                        -clog2(self.cfg['cluster']['data_width'] / 8)
+                        - clog2(self.cfg['cluster']['data_width']/8)
                 # Sort SSRs by register indices (required by decoding logic)
                 core['ssrs'].sort(key=lambda x: x['reg_idx'])
                 # Minimum 1 element to avoid illegal ranges (Xssr prevents generation)
@@ -326,13 +308,13 @@ class SnitchCluster(Generator):
         self.cfg['cluster']['nr_hives'] = len(self.cfg['cluster']['hives'])
         self.cfg['cluster']['nr_cores'] = len(cores)
         # Minimum 1 element to avoid illegal ranges
-        self.cfg['cluster']['num_ssrs_max'] = max(
-            max(len(core['ssrs']) for core in cores), 1)
+        self.cfg['cluster']['num_ssrs_max'] = max(max(len(core['ssrs']) for core in cores), 1)
         self.cfg['cluster']['cores'] = cores
 
     def cfg_validate(self):
         failed = True
         """Perform more advanced validation, i.e., sanity check parameters."""
+        tcdm = self.cfg['cluster']['tcdm']
         if int(self.cfg['cluster']['addr_width']) < 30:
             log.error("`addr_width` must be greater or equal to 30.")
         elif not ((int(self.cfg['cluster']['data_width']) == 32) or
@@ -344,23 +326,23 @@ class SnitchCluster(Generator):
                 self.cfg['cluster']['data_width']) != 0:
             log.error(
                 "DMA port {} has to be multiple of {} (bank width)".format(
-                    self.cfg['cluster']['dma_data_width'],
-                    self.cfg['cluster']['data_width']))
+                    self.cfg['cluster']['dma_data_width'], self.cfg['cluster']['data_width']))
         elif is_pow2(self.cfg['cluster']['dma_data_width']):
             log.error("`dma_data_width` must be a power of two")
         # elif cfg.en_rvd and not cfg.en_rvf:
         #     log.error("RVD needs RVF")
         # elif cfg.en_rvd and not cfg.data_width == 64:
         #     log.error("RVD needs 64 bit data buses")
-        elif (self.cfg['cluster']['tcdm']['size'] %
-              self.cfg['cluster']['tcdm']['banks']) != 0:
+        elif (tcdm['size'] % tcdm['banks']) != 0:
             log.error(
                 "The total size of the TCDM must be divisible by the requested amount of banks."
             )
-        elif is_pow2(self.cfg['cluster']['tcdm']['size']):
-            log.error("The TCDM size must be a power of two.")
-        elif is_pow2(self.cfg['cluster']['tcdm']['banks']):
-            log.error("The amount of banks must be a power of two.")
+        elif is_pow2(tcdm['size'] / tcdm['banks']):
+            log.error(
+                "The size of each TCDM bank must be a power of two."
+            )
+        elif (tcdm['banks'] % tcdm['hyperbanks']) != 0:
+            log.error("Number of banks must be an integer multiple of number of hyperbanks.")
         else:
             failed = False
 

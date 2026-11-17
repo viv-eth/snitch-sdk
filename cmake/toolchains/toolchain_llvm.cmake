@@ -35,24 +35,3 @@ add_compile_options("--target=riscv32-unknown-elf")
 # ---------------------------------------------------------------------------
 # Use LLVM LLD linker
 add_link_options("-fuse-ld=lld")
-
-# ---------------------------------------------------------------------------
-# LLVM Version Check
-# ---------------------------------------------------------------------------
-execute_process(
-    COMMAND ${CMAKE_C_COMPILER} --version
-    OUTPUT_VARIABLE LLVM_VERSION
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-# Extract major/minor/patch version numbers
-string(REGEX MATCH "^[0-9]+" LLVM_VERSION_MAJOR "${LLVM_VERSION}")
-string(REGEX MATCH "[0-9]+$" LLVM_VERSION_MINOR "${LLVM_VERSION}")
-string(REGEX MATCH "[0-9]+$" LLVM_VERSION_PATCH "${LLVM_VERSION}")
-
-if (LLVM_VERSION_MAJOR LESS 15)
-    message(STATUS "Disabling linker relaxation for LLVM < 15")
-    # WIESEP: Disable linker relaxation for LLVM 12
-    add_compile_options("-mno-relax")
-    add_link_options("-Wl,--no-relax")
-endif()

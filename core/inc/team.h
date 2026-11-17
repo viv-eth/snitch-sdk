@@ -14,20 +14,18 @@
  */
 
 #pragma once
-#include <stdint.h>
 
-// Include the SoC address map for heterogeneous cluster configuration
-#include "addr_maps/soc_addr_map.h"
+#include "snrt_platform.h"
 
 /**
  * @brief Get the RISC-V hardware thread ID (hartid).
  *
  * @return The hardware thread ID.
  */
-static inline uint32_t __attribute__((const)) snrt_hartid() {
-  uint32_t hartid;
-  asm("csrr %0, mhartid" : "=r"(hartid));
-  return hartid;
+inline uint32_t __attribute__((const)) snrt_hartid() {
+    uint32_t hartid;
+    asm("csrr %0, mhartid" : "=r"(hartid));
+    return hartid;
 }
 
 /**
@@ -35,8 +33,8 @@ static inline uint32_t __attribute__((const)) snrt_hartid() {
  *
  * @return The number of clusters.
  */
-static inline uint32_t __attribute__((const)) snrt_cluster_num() {
-  return _chimera_numClusters;
+inline uint32_t __attribute__((const)) snrt_cluster_num() {
+    return snrt_platform_cluster_num();
 }
 
 /**
@@ -44,8 +42,8 @@ static inline uint32_t __attribute__((const)) snrt_cluster_num() {
  *
  * @return The number of cores in the current cluster.
  */
-static inline uint32_t __attribute__((const)) snrt_cluster_core_num() {
-  return _chimera_numCores[snrt_cluster_idx()];
+inline uint32_t __attribute__((const)) snrt_cluster_core_num() {
+    return snrt_platform_cluster_core_num(snrt_cluster_idx());
 }
 
 /**
@@ -53,8 +51,8 @@ static inline uint32_t __attribute__((const)) snrt_cluster_core_num() {
  *
  * @return The hartid of the first Snitch core in the system.
  */
-static inline uint32_t __attribute__((const)) snrt_global_core_base_hartid() {
-  return _chimera_hartBase[0];
+inline uint32_t __attribute__((const)) snrt_global_core_base_hartid() {
+    return snrt_platform_cluster_base_hartid(0);
 }
 
 /**
@@ -62,12 +60,12 @@ static inline uint32_t __attribute__((const)) snrt_global_core_base_hartid() {
  *
  * @return The total number of cores.
  */
-static inline uint32_t __attribute__((const)) snrt_global_core_num() {
-  uint32_t total = 0;
-  for (uint32_t i = 0; i < snrt_cluster_num(); i++) {
-    total += _chimera_numCores[i];
-  }
-  return total;
+inline uint32_t __attribute__((const)) snrt_global_core_num() {
+    uint32_t num = 0;
+    for (uint32_t i = 0; i < snrt_cluster_num(); i++) {
+        num += snrt_platform_cluster_core_num(i);
+    }
+    return num;
 }
 
 /**
@@ -75,12 +73,9 @@ static inline uint32_t __attribute__((const)) snrt_global_core_num() {
  *
  * @return The total number of compute cores.
  */
-static inline uint32_t __attribute__((const)) snrt_global_compute_core_num() {
-  uint32_t total = 0;
-  for (uint32_t i = 0; i < snrt_cluster_num(); i++) {
-    total += (_chimera_numCores[i] - snrt_cluster_dm_core_num());
-  }
-  return total;
+inline uint32_t __attribute__((const)) snrt_global_compute_core_num() {
+    return snrt_global_core_num() -
+           snrt_cluster_num() * snrt_cluster_dm_core_num();
 }
 
 /**
@@ -88,8 +83,8 @@ static inline uint32_t __attribute__((const)) snrt_global_compute_core_num() {
  *
  * @return The index of the current Snitch core.
  */
-static inline uint32_t __attribute__((const)) snrt_global_core_idx() {
-  return snrt_hartid() - snrt_global_core_base_hartid();
+inline uint32_t __attribute__((const)) snrt_global_core_idx() {
+    return snrt_hartid() - snrt_global_core_base_hartid();
 }
 
 /**
@@ -97,23 +92,9 @@ static inline uint32_t __attribute__((const)) snrt_global_core_idx() {
  *
  * @return The index of the current Snitch compute core.
  */
-static inline uint32_t __attribute__((const)) snrt_global_compute_core_idx() {
-  uint32_t cluster_idx = snrt_cluster_idx();
-  uint32_t compute_idx = 0;
-
-  // Sum compute cores from all previous clusters
-  for (uint32_t i = 0; i < cluster_idx; i++) {
-    compute_idx += (_chimera_numCores[i] - snrt_cluster_dm_core_num());
-  }
-
-  // Add the compute core index within the current cluster
-  // Core 0 is DM, so compute cores start at index 1
-  uint32_t local_core_idx = snrt_cluster_core_idx();
-  if (local_core_idx > 0) {
-    compute_idx += (local_core_idx - snrt_cluster_dm_core_num());
-  }
-
-  return compute_idx;
+inline uint32_t __attribute__((const)) snrt_global_compute_core_idx() {
+    return snrt_global_core_idx() -
+           snrt_cluster_idx() * snrt_cluster_dm_core_num();
 }
 
 /**
@@ -121,16 +102,16 @@ static inline uint32_t __attribute__((const)) snrt_global_compute_core_idx() {
  *
  * @return The index of the current cluster.
  */
-static inline uint32_t __attribute__((const)) snrt_cluster_idx() {
-  uint32_t global_idx = snrt_global_core_idx();
-  uint32_t accumulated_cores = 0;
-  for (uint32_t i = 0; i < snrt_cluster_num(); i++) {
-    accumulated_cores += _chimera_numCores[i];
-    if (global_idx < accumulated_cores) {
-      return i;
+inline uint32_t __attribute__((const)) snrt_cluster_idx() {
+    uint32_t hartid = snrt_hartid();
+    uint32_t last = snrt_cluster_num() - 1;
+    for (uint32_t i = 0; i < last; i++) {
+        if (hartid - snrt_platform_cluster_base_hartid(i) <
+            snrt_platform_cluster_core_num(i)) {
+            return i;
+        }
     }
-  }
-  return snrt_cluster_num() - 1; // fallback to last cluster
+    return last;
 }
 
 /**
@@ -138,13 +119,9 @@ static inline uint32_t __attribute__((const)) snrt_cluster_idx() {
  *
  * @return The index of the current core within the cluster.
  */
-static inline uint32_t __attribute__((const)) snrt_cluster_core_idx() {
-  uint32_t cluster_idx = snrt_cluster_idx();
-  uint32_t accumulated_cores = 0;
-  for (uint32_t i = 0; i < cluster_idx; i++) {
-    accumulated_cores += _chimera_numCores[i];
-  }
-  return snrt_global_core_idx() - accumulated_cores;
+inline uint32_t __attribute__((const)) snrt_cluster_core_idx() {
+    return snrt_hartid() -
+           snrt_platform_cluster_base_hartid(snrt_cluster_idx());
 }
 
 /**
@@ -152,18 +129,17 @@ static inline uint32_t __attribute__((const)) snrt_cluster_core_idx() {
  *
  * @return The number of DM cores per cluster.
  */
-static inline uint32_t __attribute__((const)) snrt_cluster_dm_core_num() {
-  // Each cluster has exactly 1 DM core (core 0)
-  return 1;
+inline uint32_t __attribute__((const)) snrt_cluster_dm_core_num() {
+    return SNRT_CLUSTER_DM_CORE_NUM;
 }
 
 /**
- * @brief Get the number of compute cores per cluster.
+ * @brief Get the number of compute cores in the current cluster.
  *
- * @return The number of compute cores per cluster.
+ * @return The number of compute cores in the current cluster.
  */
-static inline uint32_t __attribute__((const)) snrt_cluster_compute_core_num() {
-  return snrt_cluster_core_num() - snrt_cluster_dm_core_num();
+inline uint32_t __attribute__((const)) snrt_cluster_compute_core_num() {
+    return snrt_cluster_core_num() - snrt_cluster_dm_core_num();
 }
 
 /**
@@ -171,8 +147,8 @@ static inline uint32_t __attribute__((const)) snrt_cluster_compute_core_num() {
  *
  * @return True if the current core is a compute core, false otherwise.
  */
-static inline int __attribute__((const)) snrt_is_compute_core() {
-  return snrt_cluster_core_idx() < snrt_cluster_compute_core_num();
+inline int __attribute__((const)) snrt_is_compute_core() {
+    return snrt_cluster_core_idx() < snrt_cluster_compute_core_num();
 }
 
 /**
@@ -180,8 +156,8 @@ static inline int __attribute__((const)) snrt_is_compute_core() {
  *
  * @return True if the current core is the last compute core, false otherwise.
  */
-static inline int __attribute__((const)) snrt_cluster_is_last_compute_core() {
-  return snrt_cluster_core_idx() == (snrt_cluster_compute_core_num() - 1);
+inline int __attribute__((const)) snrt_cluster_is_last_compute_core() {
+    return snrt_cluster_core_idx() == (snrt_cluster_compute_core_num() - 1);
 }
 
 /**
@@ -189,6 +165,16 @@ static inline int __attribute__((const)) snrt_cluster_is_last_compute_core() {
  *
  * @return True if the current core is a DM core, false otherwise.
  */
-static inline int __attribute__((const)) snrt_is_dm_core() {
-  return !snrt_is_compute_core();
+inline int __attribute__((const)) snrt_is_dm_core() {
+    return !snrt_is_compute_core();
+}
+
+// Translates this cluster's core_mask to cluster_idx; DM cores stay last
+inline uint32_t __attribute__((const))
+snrt_remote_core_mask(uint32_t core_mask, uint32_t cluster_idx) {
+    uint32_t num = snrt_cluster_compute_core_num();
+    uint32_t remote_num = snrt_platform_cluster_core_num(cluster_idx) -
+                          snrt_cluster_dm_core_num();
+    uint32_t compute_mask = (1u << (num < remote_num ? num : remote_num)) - 1;
+    return (core_mask & compute_mask) | ((core_mask >> num) << remote_num);
 }

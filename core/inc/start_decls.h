@@ -6,4 +6,4 @@
 
 __attribute__((noinline)) void snrt_exit(int exit_code);
 
-static inline uint32_t snrt_cls_base_addr();
+inline uint32_t snrt_cls_base_addr();

@@ -2,54 +2,57 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
+#include <stddef.h>
 #include <stdint.h>
 
-//===============================================================
-// Constants
-//===============================================================
+#include "snrt_compat.h"
 
-#define CLUSTER_CLINT_SET_ADDR                                                 \
-  (CLUSTER_PERIPH_BASE_ADDR + SNITCH_CLUSTER_PERIPHERAL_CL_CLINT_SET_REG_OFFSET)
-#define CLUSTER_CLINT_CLR_ADDR                                                 \
-  (CLUSTER_PERIPH_BASE_ADDR +                                                  \
-   SNITCH_CLUSTER_PERIPHERAL_CL_CLINT_CLEAR_REG_OFFSET)
+#ifdef SNITCH_CLUSTER_ADDRMAP_CLUSTER_ALIAS_BASE_ADDR
+// Must return a pointer to the snitch_cluster_t struct
+// of the cluster alias.
+inline volatile snitch_cluster_t* snrt_cluster_alias() {
+    return &(snitch_cluster_addrmap.cluster_alias);
+}
+#endif
 
-#define CLUSTER_PERF_COUNTER_ADDR                                              \
-  (CLUSTER_PERIPH_BASE_ADDR +                                                  \
-   SNITCH_CLUSTER_PERIPHERAL_PERF_CNT_EN_0_REG_OFFSET)
-
-#define CLUSTER_TCDM_START_ADDR CLUSTER_TCDM_BASE_ADDR
-
-#define CLUSTER_TCDM_END_ADDR CLUSTER_PERIPH_BASE_ADDR
-
-//===============================================================
-// snRuntime interface functions
-//===============================================================
-
-static inline uint32_t cluster_base_offset() {
-  return snrt_cluster_idx() * SNRT_CLUSTER_OFFSET;
+// Must return a pointer to the snitch_cluster_t struct
+// of the cluster selected by cluster_idx.
+SNRT_OVERLOADABLE inline volatile snitch_cluster_t* snrt_cluster(
+    int cluster_idx) {
+    // Clusters are SNRT_CLUSTER_OFFSET apart, as start.S and sync.h assume
+    uintptr_t addr = (uintptr_t)(&snitch_cluster_addrmap.cluster);
+    addr += (uintptr_t)cluster_idx * SNRT_CLUSTER_OFFSET;
+    return (volatile snitch_cluster_t*)addr;
 }
 
-static inline uint32_t snrt_l1_start_addr() {
-  return CLUSTER_TCDM_BASE_ADDR + cluster_base_offset();
+// Must return a pointer to the snitch_cluster_t struct
+// of the cluster invoking the function.
+SNRT_OVERLOADABLE inline volatile snitch_cluster_t* snrt_cluster(void) {
+    return snrt_cluster(snrt_cluster_idx());
 }
 
-static inline uint32_t snrt_l1_end_addr() {
-  return CLUSTER_BOOTROM_BASE_ADDR + cluster_base_offset();
+// snitch-sdk accessors, kept for chimera-sdk and existing callers
+inline uint32_t snrt_l1_start_addr() {
+    return (uintptr_t)(snrt_cluster()->tcdm.mem);
 }
 
-static inline volatile uint32_t *snrt_cluster_clint_set_ptr() {
-  return (uint32_t *)(CLUSTER_CLINT_SET_ADDR + cluster_base_offset());
+inline uint32_t snrt_l1_end_addr() {
+    return snrt_l1_start_addr() + SNRT_TCDM_SIZE;
 }
 
-static inline volatile uint32_t *snrt_cluster_clint_clr_ptr() {
-  return (uint32_t *)(CLUSTER_CLINT_CLR_ADDR + cluster_base_offset());
+inline volatile uint32_t* snrt_cluster_clint_set_ptr() {
+    return (volatile uint32_t*)&(snrt_cluster()->peripheral_reg.cl_clint_set);
 }
 
-static inline uint32_t snrt_cluster_perf_counters_addr() {
-  return CLUSTER_PERF_COUNTER_ADDR + cluster_base_offset();
+inline volatile uint32_t* snrt_cluster_clint_clr_ptr() {
+    return (volatile uint32_t*)&(snrt_cluster()->peripheral_reg.cl_clint_clear);
 }
 
-static inline volatile uint32_t *snrt_zero_memory_ptr() {
-  return (uint32_t *)(CLUSTER_ZERO_MEM_START_ADDR + cluster_base_offset());
+inline uint32_t snrt_cluster_perf_counters_addr() {
+    volatile snitch_cluster_t* cluster = snrt_cluster();
+    return (uintptr_t)(&cluster->peripheral_reg.perf_regs);
+}
+
+inline volatile uint32_t* snrt_zero_memory_ptr() {
+    return (volatile uint32_t*)(snrt_cluster()->zeromem.mem);
 }

@@ -5,21 +5,33 @@
 #pragma once
 
 #include "riscv-opcodes/encoding.h"
+#include "snrt_compat.h"
+
+/**
+ * @brief Write mask to the cluster-local interrupt set register
+ * @param mask set bit at X sets the interrupt of hart X
+ * @param cluster_idx Index of the cluster to which the interrupt is sent
+ */
+SNRT_OVERLOADABLE inline void snrt_int_cluster_set(uint32_t mask,
+                                                   uint32_t cluster_idx) {
+    snrt_cluster(cluster_idx)->peripheral_reg.cl_clint_set.w = (uint64_t)mask;
+}
 
 /**
  * @brief Write mask to the cluster-local interrupt set register
  * @param mask set bit at X sets the interrupt of hart X
  */
-static inline void snrt_int_cluster_set(uint32_t mask) {
-  *(snrt_cluster_clint_set_ptr()) = mask;
+inline void snrt_int_cluster_set(uint32_t mask) {
+    snrt_int_cluster_set(mask, snrt_cluster_idx());
 }
 
 /**
  * @brief Write mask to the cluster-local interrupt clear register
  * @param mask set bit at X clears the interrupt of hart X
  */
-static inline void snrt_int_cluster_clr(uint32_t mask) {
-  *(snrt_cluster_clint_clr_ptr()) = mask;
+inline void snrt_int_cluster_clr(uint32_t mask) {
+    snrt_cluster(snrt_cluster_idx())
+        ->peripheral_reg.cl_clint_clear.f.cl_clint_clear = mask;
 }
 
 /**
@@ -29,26 +41,18 @@ static inline void snrt_int_cluster_clr(uint32_t mask) {
  *         `snrt_int_wait_mcip_clr` if you need to block until the interrupt is
  *         cleared.
  */
-static inline void snrt_int_clr_mcip_unsafe() {
-  snrt_int_cluster_clr(1 << snrt_cluster_core_idx());
-}
-
-/**
- * @brief Wait for MCIP interrupt to be cleared
- */
-static inline void snrt_int_wait_mcip_clr() {
-  while (read_csr(mip) & MIP_MCIP)
-    ;
+inline void snrt_int_clr_mcip_unsafe() {
+    snrt_int_cluster_clr(1 << snrt_cluster_core_idx());
 }
 
 /**
  * @brief Clear MCIP interrupt and wait for the write to have effect
  */
-static inline void snrt_int_clr_mcip() {
-  snrt_int_clr_mcip_unsafe();
-  snrt_int_wait_mcip_clr();
+inline void snrt_int_clr_mcip() {
+    snrt_int_clr_mcip_unsafe();
+    snrt_fence();
 }
 
-static inline void snrt_int_set_mcip() {
-  snrt_int_cluster_set(1 << snrt_cluster_core_idx());
+inline void snrt_int_set_mcip() {
+    snrt_int_cluster_set(1 << snrt_cluster_core_idx());
 }

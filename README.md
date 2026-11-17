@@ -6,7 +6,7 @@ The Snitch cluster and the Snitch-SDK are developed as part of the [PULP project
 
 ## License
 
-Unless specified otherwise in the respective file headers, all code checked into this repository is made available under a permissive license. All software sources are licensed under Apache 2.0 (see LICENSE) or compatible licenses, with the exception of `scripts/run_clang_format.py`, which is licensed under the MIT license.
+Unless specified otherwise in the respective file headers, all code checked into this repository is made available under a permissive license. All software sources are licensed under Apache 2.0 (see LICENSE) or compatible licenses, with the exception of `scripts/run_clang_format.py`, which is licensed under the MIT license. The linker scripts in `linker/`, the SystemRDL templates in `devices/snitch_cluster/templates/` and `deps/idma/idma_compute.h` (vendored from [iDMA](https://github.com/pulp-platform/iDMA) v0.7.3) are licensed under the Solderpad Hardware License 0.51 (SHL-0.51).
 
 ## Documentation
 

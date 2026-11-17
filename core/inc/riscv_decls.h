@@ -6,14 +6,22 @@
 
 #include <stdint.h>
 
-static inline void snrt_wfi();
+#define R_TYPE_ENCODE(funct7, rs2, rs1, funct3, rd, opcode)                    \
+    ((funct7 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | \
+     (opcode))
 
-static inline uint32_t snrt_mcycle();
+#define OP_CUSTOM1 0b0101011
 
-static inline void snrt_interrupt_enable(uint32_t irq);
+inline void snrt_wfi();
 
-static inline void snrt_interrupt_disable(uint32_t irq);
+inline void snrt_fence();
 
-static inline void snrt_interrupt_global_enable(void);
+inline uint32_t snrt_mcycle();
 
-static inline void snrt_interrupt_global_disable(void);
+inline void snrt_interrupt_enable(uint32_t irq);
+
+inline void snrt_interrupt_disable(uint32_t irq);
+
+inline void snrt_interrupt_global_enable(void);
+
+inline void snrt_interrupt_global_disable(void);

@@ -8,7 +8,7 @@ The SDK is organized into the following main folders:
     Snitch-SDK/
     ├── cmake/              # CMake modules, toolchain files, and configuration templates
     ├── core/               # Core runtime source files and public headers
-    ├── deps/               # External dependencies (managed as Git submodules)
+    ├── deps/               # External dependencies (Git submodules, plus the vendored deps/idma header)
     ├── docs/               # Documentation sources (Sphinx, Doxygen, etc.)
     ├── omp/                # Parallel programming (OMP) support sources and headers
     ├── scripts/            # Utility scripts (e.g., header generation, formatting)

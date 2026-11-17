@@ -4,14 +4,17 @@
 #
 # Viviane Potocnik <vivianep@iis.ee.ethz.ch>
 
-file(GLOB RUNTIME_TARGET_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.S"
+# src/snrt.c is the single-TU build of the runtime; core/ and omp/ already compile its sources
+set(RUNTIME_TARGET_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/snitch_cluster_start.S"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/snitch_cluster_start.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/putchar.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../common/src/snitch_cluster_memory.c"
 )
 
 add_library(snitch_runtime_target STATIC ${RUNTIME_TARGET_SOURCES})
 
-target_compile_options(snitch_runtime_target 
+target_compile_options(snitch_runtime_target
     PUBLIC
         ${COMMON_COMPILE_OPTIONS}
 )
